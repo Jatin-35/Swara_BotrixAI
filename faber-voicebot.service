@@ -1,0 +1,14 @@
+[Unit]
+Description=Faber VoiceBot (Farishta) — uvicorn streaming_cube:app
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/paluck-pw-voicebot/src
+ExecStart=/root/paluck-pw-voicebot/.venv/bin/python -m uvicorn streaming_cube:app --host 0.0.0.0 --port 8040
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

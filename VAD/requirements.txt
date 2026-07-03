@@ -1,0 +1,6 @@
+torch
+torchaudio
+numpy
+websockets
+resampy
+scipy==1.15.3

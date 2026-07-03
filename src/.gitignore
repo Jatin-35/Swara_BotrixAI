@@ -1,0 +1,26 @@
+azure_stt.py
+old.py
+old2.py
+echo.py
+elabs.py
+low.py
+noise_suppress_spectral.py
+sarvam_stt.py
+server.py
+soniox_stt.py
+soniox_stt_sdk.py
+soniox_cube.py
+soniox.py
+soniox_s.py
+voice_sample.py
+x.py
+rnnoise_wrapper.py
+requirements copy.txt
+
+
+elevenlabs_tts.py
+elevenlabs_ws_tts.py
+streaming.py
+
+api_integration.py
+events.py

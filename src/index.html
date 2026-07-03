@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faber India – Farishta Installation Follow-up Bot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #b71c1c 0%, #c62828 60%, #d32f2f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+            max-width: 520px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .brand-header {
+            margin-bottom: 28px;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .brand-logo i {
+            font-size: 2rem;
+            color: #c62828;
+        }
+
+        .brand-header h1 {
+            color: #b71c1c;
+            font-size: 1.7rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .brand-header .tagline {
+            color: #555;
+            font-size: 0.92rem;
+            margin-top: 4px;
+        }
+
+        .faber-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff5f5;
+            border: 1px solid #ef9a9a;
+            color: #c62828;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-top: 8px;
+        }
+
+        .backend-selector {
+            margin-top: 16px;
+            padding: 12px 15px;
+            background: #fff5f5;
+            border-radius: 10px;
+            border: 1px solid #ef9a9a;
+            text-align: left;
+        }
+
+        .backend-selector label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        .backend-switch {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid #ef9a9a;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            background: white;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+
+        .backend-switch:focus {
+            outline: none;
+            border-color: #c62828;
+            box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.15);
+        }
+
+        .backend-status {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.82rem;
+            color: #555;
+        }
+
+        .status-indicator {
+            font-size: 0.95rem;
+            color: #22c55e;
+            animation: pulse-dot 2s infinite;
+        }
+
+        .status-indicator.disconnected {
+            color: #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.4; }
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #fce4e4;
+            margin: 22px 0 20px;
+        }
+
+        .section-label {
+            text-align: left;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #c62828;
+            margin-bottom: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.92rem;
+        }
+
+        .form-group label .optional {
+            font-weight: 400;
+            color: #888;
+            font-size: 0.82rem;
+            margin-left: 4px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 13px 16px 13px 46px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.25s ease;
+            background: #f8f9fa;
+            color: #222;
+        }
+
+        .field-input.no-icon {
+            padding-left: 16px;
+        }
+
+        .field-input:focus {
+            outline: none;
+            border-color: #c62828;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #c62828;
+            font-size: 1rem;
+        }
+
+        select.field-input {
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .call-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #b71c1c 0%, #c62828 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .call-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(198, 40, 40, 0.35);
+        }
+
+        .call-button:active  { transform: translateY(0); }
+
+        .call-button:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-message {
+            margin-top: 18px;
+            padding: 13px 16px;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            display: none;
+            text-align: left;
+        }
+
+        .status-success {
+            background: rgba(34, 197, 94, 0.08);
+            color: #16a34a;
+            border: 1px solid rgba(34, 197, 94, 0.25);
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.08);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .status-info {
+            background: rgba(198, 40, 40, 0.08);
+            color: #c62828;
+            border: 1px solid rgba(198, 40, 40, 0.2);
+        }
+
+        .format-hint {
+            margin-top: 18px;
+            text-align: left;
+            font-size: 0.82rem;
+            color: #888;
+        }
+
+        .format-hint strong { color: #555; }
+
+        @media (max-width: 480px) {
+            .container { padding: 28px 18px; }
+            .brand-header h1 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- Brand Header -->
+        <div class="brand-header">
+            <div class="brand-logo">
+                <i class="fas fa-fire"></i>
+                <h1>Faber India</h1>
+            </div>
+            <p class="tagline">Installation Follow-up — Farishta Voice Bot</p>
+            <span class="faber-badge">
+                <i class="fas fa-microphone"></i> Farishta AI Assistant
+            </span>
+
+            <!-- Backend selector -->
+            <div class="backend-selector">
+                <label for="backendSwitch">Backend:</label>
+                <select id="backendSwitch" class="backend-switch">
+                    <option value="deployed">🌐 Deployed (Cube)</option>
+                    <option value="local">🏠 Local (localhost:8040)</option>
+                </select>
+                <div class="backend-status" id="backendStatus">
+                    <span class="status-indicator" id="statusIndicator">●</span>
+                    <span id="currentBackend">Deployed (Cube)</span>
+                </div>
+            </div>
+        </div>
+
+        <form id="callForm">
+
+            <!-- ── SECTION: Call Details ── -->
+            <p class="section-label"><i class="fas fa-phone-alt"></i> &nbsp;Call Details</p>
+
+            <div class="form-group">
+                <label for="phoneNumber">Customer Phone Number</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-phone input-icon"></i>
+                    <input type="tel" id="phoneNumber" class="field-input"
+                        placeholder="+91XXXXXXXXXX or 10-digit" required autocomplete="tel">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="customerName">Customer Name <span class="optional">(optional)</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" id="customerName" class="field-input"
+                        placeholder="e.g. Ramesh Sharma" autocomplete="name">
+                </div>
+            </div>
+
+            <hr class="divider">
+
+            <!-- ── SECTION: Product Details ── -->
+            <p class="section-label"><i class="fas fa-box-open"></i> &nbsp;Product Details</p>
+
+            <div class="form-group">
+                <label for="product">Product</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-fire-alt input-icon"></i>
+                    <select id="product" class="field-input" required>
+                        <option value="" disabled selected>— Select Faber product —</option>
+                        <option value="Chimney">Chimney (Kitchen Hood)</option>
+                        <option value="Hob">Hob (Gas Cooktop)</option>
+                        <option value="Built-in Oven">Built-in Oven</option>
+                        <option value="Microwave Oven">Microwave Oven</option>
+                        <option value="Dishwasher">Dishwasher</option>
+                        <option value="Water Purifier">Water Purifier</option>
+                        <option value="Cooktop">Glass Cooktop</option>
+                        <option value="Induction Cooktop">Induction Cooktop</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="dealerName">Dealer Name <span class="optional">(optional)</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-store input-icon"></i>
+                    <input type="text" id="dealerName" class="field-input"
+                        placeholder="e.g. Sharma Electronics, Connaught Place">
+                </div>
+            </div>
+
+            <hr class="divider">
+
+            <!-- ── SECTION: Support Details ── -->
+            <p class="section-label"><i class="fas fa-headset"></i> &nbsp;Support Details</p>
+
+            <div class="form-group">
+                <label for="tollFree">Toll-Free Number <span class="optional">(optional)</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-phone-volume input-icon"></i>
+                    <input type="text" id="tollFree" class="field-input"
+                        placeholder="Default: 1800 209 3484">
+                </div>
+            </div>
+
+            <button type="submit" class="call-button" id="callButton">
+                <i class="fas fa-phone-alt" id="callIcon"></i>
+                <div class="loading-spinner" id="loadingSpinner"></div>
+                <span id="buttonText">Initiate Call</span>
+            </button>
+        </form>
+
+        <div id="statusMessage" class="status-message"></div>
+
+        <p class="format-hint">
+            <strong>Format:</strong> 10-digit number (auto-adds +91) or full international e.g. +919876543210
+        </p>
+
+    </div>
+
+    <script>
+        // ── Backend config ──────────────────────────────────────────────
+        // When the page is served from FastAPI (http://<host>:8040/),
+        // use window.location.origin so the URL stays correct regardless
+        // of which server IP is used. Falls back to hardcoded IP only when
+        // opened as a local file (file://).
+        const BACKENDS = {
+            'deployed': (window.location.protocol !== 'file:')
+                ? window.location.origin
+                : 'http://103.178.248.147:8040',
+            'local':    'http://localhost:8040',
+        };
+
+        const BACKEND_LABELS = {
+            'deployed': 'Deployed (Cube)',
+            'local':    'Local (localhost:8040)',
+        };
+
+        let currentBackend = 'deployed';
+        let BACKEND_URL    = BACKENDS[currentBackend];
+
+        // ── DOM refs ────────────────────────────────────────────────────
+        const form             = document.getElementById('callForm');
+        const phoneInput       = document.getElementById('phoneNumber');
+        const callButton       = document.getElementById('callButton');
+        const callIcon         = document.getElementById('callIcon');
+        const loadingSpinner   = document.getElementById('loadingSpinner');
+        const buttonText       = document.getElementById('buttonText');
+        const statusMessage    = document.getElementById('statusMessage');
+        const backendSwitch    = document.getElementById('backendSwitch');
+        const statusIndicator  = document.getElementById('statusIndicator');
+        const currentBackendEl = document.getElementById('currentBackend');
+
+        // ── Backend switching ───────────────────────────────────────────
+        function switchBackend(backend) {
+            currentBackend = backend;
+            BACKEND_URL    = BACKENDS[backend];
+            backendSwitch.value = backend;
+            currentBackendEl.textContent = BACKEND_LABELS[backend] || backend;
+            checkBackendHealth();
+            showStatusMessage(`Switched to ${BACKEND_LABELS[backend]}`, 'info');
+        }
+
+        async function checkBackendHealth() {
+            try {
+                statusIndicator.className = 'status-indicator';
+                const response = await fetch(`${BACKEND_URL}/health`, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(5000)
+                });
+                statusIndicator.style.color = response.ok ? '#22c55e' : '#ef4444';
+                if (!response.ok) statusIndicator.className = 'status-indicator disconnected';
+            } catch {
+                statusIndicator.className = 'status-indicator disconnected';
+                statusIndicator.style.color = '#ef4444';
+            }
+        }
+
+        // ── Phone validation ────────────────────────────────────────────
+        function validatePhoneNumber(phone) {
+            return /^\+\d{7,15}$/.test(phone.replace(/[^\d+]/g, ''));
+        }
+
+        phoneInput.addEventListener('input', function (e) {
+            let v = e.target.value.replace(/[^\d+\s\-\(\)]/g, '');
+            if (v.includes('+') && !v.startsWith('+')) v = v.replace(/\+/g, '');
+            e.target.value = v;
+            hideStatusMessage();
+        });
+
+        // ── Status helpers ──────────────────────────────────────────────
+        function showStatusMessage(msg, type) {
+            statusMessage.textContent = msg;
+            statusMessage.className = `status-message status-${type}`;
+            statusMessage.style.display = 'block';
+        }
+
+        function hideStatusMessage() {
+            statusMessage.style.display = 'none';
+        }
+
+        function setLoadingState(loading) {
+            callButton.disabled          = loading;
+            callIcon.style.display       = loading ? 'none'  : 'block';
+            loadingSpinner.style.display = loading ? 'block' : 'none';
+            buttonText.textContent       = loading ? 'Initiating Call…' : 'Initiate Call';
+        }
+
+        // ── Form submit ─────────────────────────────────────────────────
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            let phoneNumber = phoneInput.value.trim();
+
+            // Auto-prepend +91 for bare 10-digit numbers
+            if (!phoneNumber.startsWith('+')) {
+                phoneNumber = '+91' + phoneNumber;
+            }
+
+            if (!phoneNumber) { showStatusMessage('Please enter a phone number.', 'error'); return; }
+            if (!validatePhoneNumber(phoneNumber)) {
+                showStatusMessage('Please enter a valid phone number (e.g. +919876543210).', 'error');
+                return;
+            }
+
+            const product = document.getElementById('product').value;
+            if (!product) { showStatusMessage('Please select a Faber product.', 'error'); return; }
+
+            setLoadingState(true);
+            hideStatusMessage();
+
+            // ── Build payload ──────────────────────────────────────────
+            const customerName = document.getElementById('customerName').value.trim();
+            const dealerName   = document.getElementById('dealerName').value.trim();
+            const tollFree     = document.getElementById('tollFree').value.trim();
+
+            const payload = { to_number: phoneNumber };
+            if (customerName) payload.name = customerName;
+
+            const lead_data = {
+                flow_type:    'FABER_INSTALL_FOLLOWUP',
+                product:      product,
+            };
+            if (customerName) lead_data.customer_name = customerName;
+            if (dealerName)   lead_data.dealer_name   = dealerName;
+            if (tollFree)     lead_data.toll_free      = tollFree;
+
+            payload.lead_data = lead_data;
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/make-call`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatusMessage(`✅ Call initiated to ${phoneNumber}! Product: ${product}`, 'success');
+                    form.reset();
+                } else {
+                    showStatusMessage(`Failed: ${result.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showStatusMessage('Error: Unable to connect to server. Is the server running?', 'error');
+            } finally {
+                setLoadingState(false);
+            }
+        });
+
+        // ── Backend switch event ────────────────────────────────────────
+        backendSwitch.addEventListener('change', e => switchBackend(e.target.value));
+
+        // ── Init ────────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', function () {
+            backendSwitch.value = currentBackend;
+            currentBackendEl.textContent = BACKEND_LABELS[currentBackend];
+            checkBackendHealth();
+            setInterval(checkBackendHealth, 30000);
+        });
+    </script>
+</body>
+
+</html>
