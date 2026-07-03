@@ -9,6 +9,8 @@ echo "🚀 Starting Swara deployment..."
 cd "$PROJECT_ROOT"
 
 echo "📥 Pulling latest code..."
+git config core.fileMode false   # stop tracking chmod +x on this file as a "change"
+git checkout -- deploy.sh 2>/dev/null || true
 git pull origin main
 
 echo "📦 Installing backend dependencies..."
