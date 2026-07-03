@@ -14,7 +14,6 @@ git pull origin main
 echo "📦 Installing backend dependencies..."
 source src/venv/bin/activate
 pip install -r src/requirements.txt
-pip install -r VAD/requirements.txt || echo "⚠️ VAD deps install failed (non-fatal — backend falls back to energy-based VAD)"
 deactivate
 
 echo "🔁 Restarting backend service..."
