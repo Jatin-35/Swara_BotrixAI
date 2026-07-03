@@ -1333,7 +1333,7 @@ if not AZURE_SPEECH_KEY:
 # CONCURRENT OUTBOUND CALL REGISTRY
 # =============================================================================
 # Cube never passes a phone number in the WebSocket URL, so we cannot directly
-# tie an incoming /voicebot WebSocket to the right outbound call.  This registry
+# tie an incoming /swara_voicebot WebSocket to the right outbound call.  This registry
 # solves the problem for up to N concurrent outbound calls without any
 # name/data shuffling.
 #
@@ -1812,7 +1812,7 @@ async def call_status_endpoint():
         "cube_configured": bool(CUBE_CLICK2CALL_URL and CUBE_CAMPAIGN_ID and CUBE_DID),
         "cube_did": CUBE_DID,
         "cube_campaign_id": CUBE_CAMPAIGN_ID,
-        "websocket_endpoint": f"ws://your-server:{CUBE_WEBSOCKET_PORT}/voicebot"
+        "websocket_endpoint": f"ws://your-server:{CUBE_WEBSOCKET_PORT}/swara_voicebot"
     }
 
 
@@ -3143,7 +3143,7 @@ def _detect_call_outcome(conversation_history: list) -> tuple:
 
 # ==================== ROUTES ====================
 
-@app.websocket("/paluck_pw_voicebot")
+@app.websocket("/swara_voicebot")
 async def handle_media_stream(websocket: WebSocket):
     """Cube VoIP WebSocket handler with Azure STT and interruption support."""
     print("🔌 Cube client connected")
@@ -5700,7 +5700,7 @@ if __name__ == "__main__":
     print(f"📞 Cube DID: {CUBE_DID}")
     print(f"🌐 Cube Click2Call URL: {CUBE_CLICK2CALL_URL}")
     print(f"🎯 Cube Campaign ID: {CUBE_CAMPAIGN_ID}")
-    print(f"🔌 WebSocket Endpoint: ws://your-server:{CUBE_WEBSOCKET_PORT}/voicebot")
+    print(f"🔌 WebSocket Endpoint: ws://your-server:{CUBE_WEBSOCKET_PORT}/swara_voicebot")
     print("🤖 Function Calling: ✅ ENABLED")
     print(f"🏥 Available Functions: {', '.join(FUNCTION_MAPPING.keys())}")
     print("⚡ Instant Acknowledgments: ✅ ENABLED - Location Queries Only")
