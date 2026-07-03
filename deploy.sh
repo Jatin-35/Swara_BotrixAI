@@ -12,7 +12,7 @@ echo "📥 Pulling latest code..."
 git pull origin main
 
 echo "📦 Installing backend dependencies..."
-source venv/bin/activate
+source src/venv/bin/activate
 pip install -r src/requirements.txt
 pip install -r VAD/requirements.txt
 deactivate
