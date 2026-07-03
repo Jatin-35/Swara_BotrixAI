@@ -41,60 +41,45 @@ IST = timezone(timedelta(hours=5, minutes=30))
 # Matching is done on a normalised header (lower-cased, collapsed whitespace),
 # so minor header variations (trailing spaces, case) still map correctly.
 _HEADER_MAP = {
-    "product name":           "product_name",
-    "mobile":                 "mobile",
-    "dealer name":            "dealer_name",
-    "service request number": "service_request_number",
-    "asc name":               "asc_name",
-    "installation status":    "installation_status",
-    "remarks":                "remarks",
-    "sentiment":              "sentiment",
-    "transcript":             "transcript",
-    "summary of call":        "call_summary",
-    "customer name":          "customer_name",
+    "customer name":  "customer_name",
+    "mobile":         "mobile",
+    "remarks":        "remarks",
+    "sentiment":      "sentiment",
+    "transcript":     "transcript",
+    "summary of call": "call_summary",
 }
 
 # Order used when exporting the working copy back to xlsx
 _EXPORT_COLUMNS = [
-    ("Product Name",           "product_name"),
-    ("Mobile",                 "mobile"),
-    ("Customer Name",          "customer_name"),
-    ("Dealer Name",            "dealer_name"),
-    ("Service request number", "service_request_number"),
-    ("ASC Name",               "asc_name"),
-    ("Installation Status",    "installation_status"),
-    ("Remarks",                "remarks"),
-    ("Sentiment",              "sentiment"),
-    ("Transcript",             "transcript"),
-    ("Summary of call",        "call_summary"),
-    ("Disposition",            "disposition"),
+    ("Customer Name",   "customer_name"),
+    ("Mobile",          "mobile"),
+    ("Remarks",         "remarks"),
+    ("Sentiment",       "sentiment"),
+    ("Transcript",      "transcript"),
+    ("Summary of call", "call_summary"),
 ]
 
 # Columns a user is allowed to edit inline (others are read-only / system-managed)
 EDITABLE_FIELDS = {
-    "product_name", "mobile", "customer_name", "dealer_name", "service_request_number",
-    "asc_name", "installation_status", "remarks", "sentiment",
+    "mobile", "customer_name", "remarks", "sentiment",
     "transcript", "call_summary", "disposition",
 }
 
 # Fields the post-call writeback is allowed to set (disposition handled separately
 # via apply_disposition because it also appends into remarks).
 WRITEBACK_FIELDS = {
-    "installation_status", "sentiment", "transcript", "call_summary",
+    "sentiment", "transcript", "call_summary",
 }
 
 # Canonical call dispositions — set on a row after a call (own column + appended
 # into remarks).
 DISPOSITIONS = [
-    "Installation Completed",
-    "Waiting For Technician",
-    "Refused For Service",
-    "Site Not Ready",
-    "Customer will call back",
-    "Language Barrier",
-    "Damaged/Defective Product Received",
-    "Complaint After Service",
+    "Interested - Will Visit",
+    "Not Interested",
+    "Will Visit Later",
+    "Busy - Call Later",
     "Wrong Number",
+    "Language Barrier",
     "No Response",
     "Other",
 ]
@@ -202,13 +187,11 @@ def save_and_import(file_bytes: bytes, original_name: str, uploaded_by: str = No
         _execute(
             """
             INSERT INTO lead_file_rows
-                (file_id, row_index, product_name, mobile, customer_name, dealer_name,
-                 service_request_number, asc_name, installation_status,
+                (file_id, row_index, mobile, customer_name,
                  remarks, sentiment, transcript, call_summary, call_status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'pending')
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'pending')
             """,
-            (file_id, i, rec["product_name"], rec["mobile"], rec["customer_name"], rec["dealer_name"],
-             rec["service_request_number"], rec["asc_name"], rec["installation_status"],
+            (file_id, i, rec["mobile"], rec["customer_name"],
              rec["remarks"], rec["sentiment"], rec["transcript"], rec["call_summary"]),
         )
 

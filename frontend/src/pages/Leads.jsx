@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 
 const PAGE_SIZE = 50;
-const DEFAULT_TOLL_FREE = "1800 209 3484";
 
 const STATUS_COLOR = {
     pending:   "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
@@ -31,19 +30,16 @@ const SENTIMENT_COLOR = {
 };
 
 // Fields editable inline (Voice BOT also writes these back post-call)
-const EDIT_FIELDS = ["installation_status", "remarks", "sentiment", "disposition"];
+const EDIT_FIELDS = ["remarks", "sentiment", "disposition"];
 
 // Standardized call dispositions (set after a call; also appended into Remarks)
 const DISPOSITIONS = [
-    "Installation Completed",
-    "Waiting For Technician",
-    "Refused For Service",
-    "Site Not Ready",
-    "Customer will call back",
-    "Language Barrier",
-    "Damaged/Defective Product Received",
-    "Complaint After Service",
+    "Interested - Will Visit",
+    "Not Interested",
+    "Will Visit Later",
+    "Busy - Call Later",
     "Wrong Number",
+    "Language Barrier",
     "No Response",
     "Other",
 ];
@@ -162,10 +158,7 @@ export default function Leads() {
         ));
         try {
             const leadData = {
-                flow_type:        "FABER_INSTALL_FOLLOWUP",
-                product:          row.product_name || "product",
-                dealer_name:      row.dealer_name || "the dealer",
-                toll_free:        DEFAULT_TOLL_FREE,
+                flow_type:        "SWARA_SALE_ANNOUNCEMENT",
                 customer_name:    row.customer_name || "",
                 lead_file_row_id: row.id,            // backend links call → row for writeback
             };
@@ -184,11 +177,8 @@ export default function Leads() {
     // ── derived ──────────────────────────────────────────────────────────────
     const filtered = rows.filter(r =>
         !search ||
-        r.product_name?.toLowerCase().includes(search.toLowerCase()) ||
         r.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
-        r.dealer_name?.toLowerCase().includes(search.toLowerCase()) ||
-        r.mobile?.includes(search) ||
-        r.service_request_number?.toLowerCase().includes(search.toLowerCase())
+        r.mobile?.includes(search)
     );
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const safePage   = Math.min(page, totalPages);
@@ -294,7 +284,7 @@ export default function Leads() {
                 {/* SEARCH */}
                 <div className="mb-4 relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input type="text" placeholder="Search by product, dealer, mobile or service request…" value={search}
+                    <input type="text" placeholder="Search by customer name or mobile…" value={search}
                         onChange={e => { setSearch(e.target.value); setPage(1); }}
                         className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500" />
                 </div>
@@ -314,23 +304,18 @@ export default function Leads() {
                         <div>
                             <table className="w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">
                                 <colgroup>
-                                    <col className="w-[7%]" />  {/* Product */}
-                                    <col className="w-[8%]" />  {/* Customer (name + mobile stacked) */}
-                                    <col className="w-[8%]" />  {/* Dealer */}
-                                    <col className="w-[9%]" />  {/* Service Req # */}
-                                    <col className="w-[12%]" /> {/* ASC */}
-                                    <col className="w-[8%]" />  {/* Installation Status */}
-                                    <col className="w-[13%]" /> {/* Remarks */}
-                                    <col className="w-[6%]" />  {/* Sentiment */}
-                                    <col className="w-[13%]" /> {/* Disposition */}
-                                    <col className="w-[7%]" />  {/* Call Status */}
-                                    <col className="w-[9%]" />  {/* Actions */}
+                                    <col className="w-[16%]" /> {/* Customer (name + mobile stacked) */}
+                                    <col className="w-[24%]" /> {/* Remarks */}
+                                    <col className="w-[10%]" /> {/* Sentiment */}
+                                    <col className="w-[20%]" /> {/* Disposition */}
+                                    <col className="w-[12%]" /> {/* Call Status */}
+                                    <col className="w-[18%]" /> {/* Actions */}
                                 </colgroup>
                                 <thead className="bg-gray-50 dark:bg-gray-900">
                                     <tr>
-                                        {["Product","Customer","Dealer","Service Req #","ASC","Installation Status","Remarks","Sentiment","Disposition","Call Status","Actions"].map(h => (
+                                        {["Customer","Remarks","Sentiment","Disposition","Call Status","Actions"].map(h => (
                                             <th key={h} className="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider overflow-hidden">
-                                                {h === "Installation Status" ? (<>Installation<br />Status</>) : <span className="truncate block">{h}</span>}
+                                                <span className="truncate block">{h}</span>
                                             </th>
                                         ))}
                                     </tr>
@@ -340,23 +325,10 @@ export default function Leads() {
                                         const editing = edit?.rowId === row.id;
                                         return (
                                             <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors align-top">
-                                                <td className="px-2 py-3 text-sm font-medium text-gray-900 dark:text-white truncate" title={row.product_name}>{row.product_name || "—"}</td>
                                                 {/* Customer — name above, mobile below (bold + visible) */}
                                                 <td className="px-2 py-3 break-words">
                                                     <div className="text-sm font-medium text-gray-900 dark:text-white break-words" title={row.customer_name}>{row.customer_name || "—"}</div>
                                                     <div className="text-sm font-bold text-gray-900 dark:text-white">{row.mobile || "—"}</div>
-                                                </td>
-                                                <td className="px-2 py-3 text-base text-gray-700 dark:text-gray-200 break-words" title={row.dealer_name}>{row.dealer_name || "—"}</td>
-                                                <td className="px-2 py-3 text-base font-mono text-gray-700 dark:text-gray-200 break-words" title={row.service_request_number}>{row.service_request_number || "—"}</td>
-                                                <td className="px-2 py-3 text-base text-gray-700 dark:text-gray-200 break-words">{row.asc_name || "—"}</td>
-
-                                                {/* Installation Status */}
-                                                <td className="px-2 py-3 text-sm text-gray-900 dark:text-white break-words">
-                                                    {editing ? (
-                                                        <input value={edit.draft.installation_status}
-                                                            onChange={e => setEdit({ ...edit, draft: { ...edit.draft, installation_status: e.target.value } })}
-                                                            className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700" />
-                                                    ) : (row.installation_status || "—")}
                                                 </td>
 
                                                 {/* Remarks */}

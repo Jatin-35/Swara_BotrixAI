@@ -178,7 +178,7 @@ export default function CallHistory() {
                                         Status
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-48">
-                                        Install / Disposition
+                                        Disposition
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Actions
@@ -241,20 +241,14 @@ export default function CallHistory() {
                                                 )}
                                             </div>
                                         </td>
-                                        {/* INSTALL STATUS + DISPOSITION COLUMN — fixed width so long text never shifts other columns */}
+                                        {/* DISPOSITION COLUMN — fixed width so long text never shifts other columns */}
                                         <td className="px-6 py-4 w-48 max-w-[12rem]">
                                             <div className="flex flex-col gap-0.5">
-                                                {call.installation_status && (
-                                                    <span className="text-xs text-gray-500 dark:text-gray-400 break-words" title="Installation status from the Swara calling list">
-                                                        Install: <span className="font-medium text-gray-700 dark:text-gray-200">{call.installation_status}</span>
-                                                    </span>
-                                                )}
-                                                {call.disposition && (
+                                                {call.disposition ? (
                                                     <span className="text-xs text-gray-500 dark:text-gray-400 break-words" title="Call disposition">
                                                         Disposition: <span className="font-medium text-blue-700 dark:text-blue-300">{call.disposition}</span>
                                                     </span>
-                                                )}
-                                                {!call.installation_status && !call.disposition && (
+                                                ) : (
                                                     <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
                                                 )}
                                             </div>
@@ -337,7 +331,6 @@ export default function CallHistory() {
                                     <p><strong>Status:</strong> {selectedCall.status?.toUpperCase() || 'N/A'}</p>
                                     {selectedCall.caller_name && <p><strong>Name:</strong> {selectedCall.caller_name}</p>}
                                     {selectedCall.firm_name && <p><strong>Company:</strong> {selectedCall.firm_name}</p>}
-                                    {selectedCall.installation_status && <p><strong>Installation:</strong> {selectedCall.installation_status}</p>}
                                     {selectedCall.disposition && <p><strong>Disposition:</strong> {selectedCall.disposition}</p>}
                                     {selectedCall.recording_url && (
                                         <p>

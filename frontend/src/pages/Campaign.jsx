@@ -122,11 +122,6 @@ function RichLeadsTable({ leads }) {
           <tr>
             <th className="px-3 py-2 text-left w-8">#</th>
             <th className="px-3 py-2 text-left">Customer</th>
-            <th className="px-3 py-2 text-left">Product</th>
-            <th className="px-3 py-2 text-left">Dealer</th>
-            <th className="px-3 py-2 text-left">Service Req #</th>
-            <th className="px-3 py-2 text-left">ASC</th>
-            <th className="px-3 py-2 text-left">Install Status</th>
             <th className="px-3 py-2 text-left">Disposition</th>
             <th className="px-3 py-2 text-left">Sentiment</th>
             <th className="px-3 py-2 text-left">Call Status</th>
@@ -141,11 +136,6 @@ function RichLeadsTable({ leads }) {
                 <div className="font-medium text-gray-900 dark:text-white break-words">{l.name || "—"}</div>
                 <div className="text-gray-500 dark:text-gray-400 whitespace-nowrap">{l.phone || "—"}</div>
               </td>
-              <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{l.product_name || "—"}</td>
-              <td className="px-3 py-2 text-gray-600 dark:text-gray-300">{l.dealer_name || "—"}</td>
-              <td className="px-3 py-2 text-gray-500 font-mono whitespace-nowrap">{l.service_request_number || "—"}</td>
-              <td className="px-3 py-2 text-gray-600 dark:text-gray-300 break-words max-w-[140px]">{l.asc_name || "—"}</td>
-              <td className="px-3 py-2 text-gray-700 dark:text-gray-200">{l.installation_status || "—"}</td>
               <td className="px-3 py-2 font-medium text-blue-700 dark:text-blue-300 break-words max-w-[160px]">{l.disposition || "—"}</td>
               <td className="px-3 py-2 text-gray-600 dark:text-gray-300">{l.sentiment || "—"}</td>
               <td className="px-3 py-2">{l.call_status ? <StatusPill status={l.call_status} /> : <span className="text-gray-400">—</span>}</td>
@@ -815,7 +805,7 @@ export default function Campaign() {
 
                 <div className="mt-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-xs text-blue-700 dark:text-blue-300">
                   The campaign calls each row of the selected list automatically. Results
-                  (installation status, disposition, sentiment) are written back live and the
+                  (disposition, sentiment, summary) are written back live and the
                   updated Excel can be downloaded after the run.
                 </div>
               </div>

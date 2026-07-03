@@ -66,7 +66,7 @@ AZURE_TTS_VOICE = "hi-IN-AartiNeural"
 
 # Cube VoIP Configuration
 CUBE_CLICK2CALL_URL = os.getenv('CUBE_CLICK2CALL_URL', 'https://cubesoftservices.com/QuickCallRHICL/Click2Call.php')
-CUBE_CAMPAIGN_ID = os.getenv('CUBE_CAMPAIGN_I', 'Ailife_SIPBot_WebSocket')
+CUBE_CAMPAIGN_ID = os.getenv('CUBE_CAMPAIGN_ID', 'Ailife_SIPBot_WebSocket')
 CUBE_DID = os.getenv('CUBE_DID', '08037367249')
 CUBE_WEBSOCKET_PORT = int(os.getenv('CUBE_WEBSOCKET_PORT', '8040'))
 
@@ -1083,7 +1083,7 @@ async def _prewarm_azure_openai():
 
 
 async def _faber_extract(transcript: str) -> dict:
-    """Focused Faber post-call extraction: installation_status, sentiment,
+    """Post-call extraction for Swara sale-announcement calls: sentiment,
     summary, and a standardized disposition.
 
     Self-contained (the main analysis engine is Paluck/CRM-shaped). Returns a
@@ -1093,31 +1093,20 @@ async def _faber_extract(transcript: str) -> dict:
         return {}
     _disp_list = ", ".join(f'"{d}"' for d in lead_files_mod.CONNECTED_DISPOSITIONS)
     sys_prompt = (
-        "You analyze a Hindi/English/Hinglish Faber installation follow-up call transcript.\n"
+        "You analyze a Hindi/English/Hinglish sale-announcement call transcript for "
+        "Swara The Fashion Street (a fashion retail store informing customers of a sale).\n"
         "Return STRICT JSON with exactly these keys:\n\n"
-        '"installation_status": one of ["Installation Done","Installation Scheduled","Installation Cancel","Pending","Not Reachable","Unknown"]\n'
-        "  RULES (use the FIRST rule that matches):\n"
-        "  - Installation Done       -> customer confirmed installation is complete\n"
-        "  - Installation Scheduled  -> a specific date/time was agreed for technician visit\n"
-        "  - Installation Cancel     -> customer returned product, cancelled order, or refused installation permanently\n"
-        "  - Pending                 -> installation not done yet and no date fixed (technician not arrived, customer still waiting)\n"
-        "  - Not Reachable           -> customer did not respond meaningfully AT ALL (only hello, silence, call dropped with no conversation)\n"
-        "  - Unknown                 -> installation was NEVER discussed (customer ended call early, said busy/driving, or call ended before installation question was asked or answered)\n\n"
-        '"installation_status_reason": if installation_status is "Unknown", write a very short phrase (max 5 words, dashboard display) describing what happened. Examples: "Customer was driving", "Call ended early", "Customer busy". Set to null for all other statuses.\n\n'
         '"sentiment": one of ["Happy","Neutral","Irate"]\n\n'
         '"summary": one-line English summary, max 20 words\n\n'
         f'"disposition": one of [{_disp_list}]\n'
         "  RULES (use the FIRST rule that matches):\n"
-        "  - Installation Completed        -> customer confirmed installation is done\n"
-        "  - Waiting For Technician        -> installation not done, technician not arrived yet, customer waiting\n"
-        "  - Complaint After Service       -> installation WAS already done but customer has a complaint about the service quality\n"
-        "  - Refused For Service           -> customer still HAS the product but explicitly said they do NOT want installation or technician visit (product not returned)\n"
-        "  - Site Not Ready                -> customer said their home/site is not ready for installation\n"
-        "  - Customer will call back       -> customer said they THEMSELVES will call Faber back (e.g. 'I will call you', 'main call karunga'). NEVER use this when the agent said 'I will call you back' -- that is Other.\n"
-        "  - Damaged/Defective Product Received -> customer said the product received is damaged or not working\n"
-        "  - Language Barrier              -> could not communicate due to language difference\n"
-        "  - Wrong Number                  -> customer says they never purchased this Faber product / it is a wrong number / not their product\n"
-        "  - Other                         -> use when: (a) agent agreed to call customer back at a time the customer requested, (b) product was returned / order cancelled / switched brand, (c) any scenario not covered above; always set disposition_reason\n\n"
+        "  - Interested - Will Visit  -> customer agreed or expressed intent to visit the store\n"
+        "  - Not Interested           -> customer explicitly said they are not interested / declined\n"
+        "  - Will Visit Later         -> customer is open but said they'll visit at a later, unspecified time\n"
+        "  - Busy - Call Later        -> customer was busy / asked to be called back\n"
+        "  - Wrong Number             -> customer says this is a wrong number / they never shopped at Swara\n"
+        "  - Language Barrier         -> could not communicate due to language difference\n"
+        "  - Other                    -> any scenario not covered above; always set disposition_reason\n\n"
         '"disposition_reason": short English phrase (max 5 words, dashboard display) explaining why Other was chosen. Set to null if disposition is not Other.\n\n'
         "Base everything ONLY on what the customer actually said. Do not infer or assume."
     )
@@ -1159,8 +1148,6 @@ async def _faber_lead_writeback(record_id: str, conversation_history: list):
             return
 
         extracted = await _faber_extract(transcript)
-        _install      = extracted.get("installation_status")
-        _install_why  = extracted.get("installation_status_reason")
         _disp         = extracted.get("disposition")
         _disp_why     = extracted.get("disposition_reason")
         _sentiment    = extracted.get("sentiment")
@@ -1171,8 +1158,6 @@ async def _faber_lead_writeback(record_id: str, conversation_history: list):
         await asyncio.to_thread(
             db.update_call_analysis,
             record_id,
-            installation_status=_install,
-            installation_status_reason=_install_why,
             disposition=_disp,
             disposition_reason=_disp_why,
             sentiment=_sentiment,
@@ -1187,7 +1172,6 @@ async def _faber_lead_writeback(record_id: str, conversation_history: list):
                 lead_files_mod.apply_call_result,
                 record_id,
                 transcript=transcript,
-                installation_status=_install,
                 sentiment=_sentiment,
                 call_summary=_summary,
             )
@@ -1196,7 +1180,7 @@ async def _faber_lead_writeback(record_id: str, conversation_history: list):
                 await asyncio.to_thread(lead_files_mod.apply_disposition, record_id, _disp_label)
 
         print(f"[lead_files] Voice BOT writeback done for record {record_id} "
-              f"(status={_install}, sentiment={_sentiment}, disposition={_disp})")
+              f"(sentiment={_sentiment}, disposition={_disp})")
     except Exception as e:
         print(f"[lead_files] writeback orchestration failed (non-fatal): {e}")
 
@@ -1233,7 +1217,10 @@ async def _prewarm_tts():
     try:
         # Runs synthesize_speech_azure_sdk in the TTS thread pool — this both
         # creates the _tts_synthesizer singleton AND warms its Azure WS.
-        await synthesize_speech_azure("Hello, I'm Farishta calling from Faber. Is this a good time to talk?", "hi-IN")
+        await synthesize_speech_azure(
+            "नमस्ते, मैं Priya बोल रही हूँ, Swara The Fashion Street \"पंडरी\" से। क्या आप दो minute available है?",
+            "hi-IN",
+        )
         print(f"🔥 Azure TTS pre-warm complete ({time.time()-t0:.2f}s) — greeting will be fast")
     except Exception as e:
         print(f"⚠️  Azure TTS pre-warm failed (non-fatal): {e}")
@@ -5453,10 +5440,7 @@ async def campaign_start(request: Request):
                     "name":         row.get("customer_name") or "Customer",
                     "phone_number": row.get("mobile") or "",
                     "details": {
-                        "flow_type":        "FABER_INSTALL_FOLLOWUP",
-                        "product":          row.get("product_name") or "product",
-                        "dealer_name":      row.get("dealer_name") or "the dealer",
-                        "toll_free":        "1800 209 3484",
+                        "flow_type":        "SWARA_SALE_ANNOUNCEMENT",
                         "customer_name":    row.get("customer_name") or "",
                         "lead_file_row_id": row.get("id"),
                     },
