@@ -99,8 +99,8 @@ export default function CallHistory() {
                             >
                                 <ArrowLeft className="h-5 w-5" />
                             </button>
-                            <a href="https://www.ailifebot.com/" className="flex items-center gap-2">
-                                <img src="/logo.png" alt="AI LifeBOT Logo" className="h-8 w-auto object-contain cursor-pointer" />
+                            <a href="https://www.botrixai.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                                <img src="/logo.png" alt="Swara Logo" className="h-8 w-auto object-contain cursor-pointer" />
                             </a>
                             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                                 Call History & Transcriptions
@@ -382,8 +382,9 @@ export default function CallHistory() {
             <footer className="w-full py-4 text-center border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <div className="flex justify-center items-center space-x-2 text-gray-600 dark:text-gray-300 text-sm">
                     <span>Powered by</span>
-                    <a href="https://www.ailifebot.com/" className="flex items-center gap-2">
-                        <img src="/ailifebot_logo.png" className="h-5 object-contain" alt="AI LifeBOT Logo" />
+                    <a href="https://www.botrixai.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                        <img src="/botrixai_logo.png" className="h-10 object-contain dark:hidden" alt="BotrixAI Logo" />
+                        <img src="/botrixai_logo_dark.png" className="h-10 object-contain hidden dark:block" alt="BotrixAI Logo" />
                     </a>
                 </div>
             </footer>

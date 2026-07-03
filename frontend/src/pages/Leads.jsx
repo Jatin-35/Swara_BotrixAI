@@ -471,7 +471,10 @@ export default function Leads() {
             <footer className="w-full py-4 text-center border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <div className="flex justify-center items-center space-x-2 text-gray-600 dark:text-gray-300 text-sm">
                     <span>Powered by</span>
-                    <img src="/ailifebot_logo.png" className="h-5 object-contain" alt="AI LifeBOT" />
+                    <a href="https://www.botrixai.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                        <img src="/botrixai_logo.png" className="h-10 object-contain dark:hidden" alt="BotrixAI" />
+                        <img src="/botrixai_logo_dark.png" className="h-10 object-contain hidden dark:block" alt="BotrixAI" />
+                    </a>
                 </div>
             </footer>
 

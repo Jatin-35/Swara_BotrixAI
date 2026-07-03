@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "https://paluck-bot-backend.services.ailifebot.com/api";
+const BASE_URL = import.meta.env.VITE_API_URL || "https://apivoiceagentservice-backend.botrixai.com/api";
 
 console.log('📡 API Base URL:', BASE_URL);
 
