@@ -213,7 +213,7 @@ export default function Leads() {
                                 className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors">
                                 <ArrowLeft className="h-5 w-5" />
                             </button>
-                            <img src="/logo.png" alt="Logo" className="h-8 w-auto object-contain" />
+                            <img src="/header_logo.png" alt="Logo" className="h-8 w-auto object-contain" />
                             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Swara Calling Leads</h1>
                             {rows.length > 0 && (
                                 <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">

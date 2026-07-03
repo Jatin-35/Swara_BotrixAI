@@ -39,7 +39,7 @@ export default function Login() {
       {/* LOGO */}
       <div className="flex flex-col items-center mb-4">
         <img 
-          src="/logo.png" 
+          src="/header_logo.png"
           alt="App Logo" 
           className="h-16 w-auto object-contain drop-shadow-lg"
         />

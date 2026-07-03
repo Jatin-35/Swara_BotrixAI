@@ -59,7 +59,7 @@ export default function Dashboard() {
             <div className="flex items-center space-x-3">
               <a href="https://www.botrixai.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
                 <img
-                  src="/logo.png"
+                  src="/header_logo.png"
                   alt="Swara Logo"
                   className="h-8 w-auto object-contain cursor-pointer"
                 />
