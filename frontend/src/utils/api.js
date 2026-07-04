@@ -44,7 +44,7 @@ export async function refreshLeads(date = null) {
 
 
 export async function makeCall(phoneNumber, customerName = '', companyName = '', leadData = null) {
-  const url = `${BASE_URL.replace('/api', '')}/api/make-call`;
+  const url = `${BASE_URL.replace(/\/api$/, '')}/api/make-call`;
 
   console.log('📞 makeCall() called with:', { phoneNumber, customerName, companyName, leadData });
   console.log('📡 Calling URL:', url);
@@ -164,7 +164,7 @@ export function leadFileDownloadUrl(fileId, version = "updated", filename = null
 }
 
 // ── Campaign API ─────────────────────────────────────────────────────────────
-const CAMPAIGN_BASE = BASE_URL.replace("/api", "");
+const CAMPAIGN_BASE = BASE_URL.replace(/\/api$/, "");
 
 async function campaignFetch(path, method = "GET", body = null) {
   const opts = { method, headers: { "Content-Type": "application/json" } };
@@ -186,7 +186,7 @@ export const campaignLeadsRich = (id) => campaignFetch(`/api/campaign/${id}/lead
 export const campaignReportUrl = (id) => `${CAMPAIGN_BASE}/api/campaign/${id}/report.csv`;
 
 // ── Koel Follow-Up Leads API ──────────────────────────────────────────────────
-const KOEL_BASE = BASE_URL.replace("/api", "");
+const KOEL_BASE = BASE_URL.replace(/\/api$/, "");
 
 export const koelSync  = (sdate, edate, seg = "MM") =>
     fetch(`${KOEL_BASE}/api/koel/sync`, {
