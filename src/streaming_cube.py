@@ -62,7 +62,7 @@ DEEPGRAM_API_KEY = "370d8eaa7147369c72e440934fd68994bc638485"
 # Azure TTS Configuration
 AZURE_SPEECH_KEY = "E7mHLG7UxtcWNew7wQlBrfg6F7I2Kjsxek5dsAaXL9qpxpUPilANJQQJ99CFACGhslBXJ3w3AAAYACOGAJEp"
 AZURE_SPEECH_REGION = "centralindia"
-AZURE_TTS_VOICE = "hi-IN-AartiNeural"
+AZURE_TTS_VOICE = "en-IN-Meera:DragonHDLatestNeural"
 
 # Cube VoIP Configuration
 CUBE_CLICK2CALL_URL = os.getenv('CUBE_CLICK2CALL_URL', 'https://cubesoftservices.com/QuickCallRHICL/Click2Call.php')
@@ -2980,10 +2980,10 @@ async def send_cube_greeting(websocket, conversation_history, bot_speaking_state
         if customer_name and customer_name != "Customer":
             # Extract first name only (split by space and take first word)
             first_name = customer_name.strip().split()[0] if customer_name.strip() else customer_name
-            greeting_text = f"नमस्ते {first_name} जी, मैं Priya बोल रही हूँ, Swara The Fashion Street \"पंडरी\" से। क्या आप दो minute available है?"
+            greeting_text = f"नमस्ते {first_name} जी, मैं Priya बोल रही हूँ, Swara The Fashion Street \"पंडरी\" Raipur से। क्या आप दो minute available है?"
             print(f"✅ Using personalized greeting with first_name='{first_name}'")
         else:
-            greeting_text = "नमस्ते, मैं Priya बोल रही हूँ, Swara The Fashion Street \"पंडरी\" से। क्या आप दो minute available है?"
+            greeting_text = "नमस्ते, मैं Priya बोल रही हूँ, Swara The Fashion Street \"पंडरी\" Raipur से। क्या आप दो minute available है?"
             print(f"⚠️ Using generic greeting (customer_name was '{customer_name}')")
 
         print(f"🎤 Sending Cube greeting (Hindi+terms): {greeting_text}")
