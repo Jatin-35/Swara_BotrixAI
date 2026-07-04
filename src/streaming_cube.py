@@ -4635,15 +4635,16 @@ async def recording_webhook(request: Request):
     
     Expected payload:
     {
-        "record_id": "Ailife_SIPBot_Jatin3011",  # Outbound Cube format
-        "record_id": "CubeVOIP_IN98761",          # Inbound Cube format
+        "record_id": "BotrixAI_BoT:000270806497:38",  # Outbound Cube format — "CampaignName:Number:Sequence"
+        "record_id": "CubeVOIP_IN98761",               # Inbound Cube format
         "recording_url": "https://example.com/recordings/abc123.mp3",
         "duration": 140,
         "status": "completed"
     }
-    
+
     Matching strategy (3 tiers):
-    1. cube_call_number from outbound record_id (Ailife_SIPBot_Jatin...)
+    1. cube_call_number from outbound record_id's trailing sequence number
+       (e.g. "BotrixAI_BoT:000270806497:38" -> 38) — same approach as /getCallStatus
     2. Direct record_id match (backward compat)
     3. Duration + recency fuzzy match (inbound — CubeVOIP_IN has no shared key with UUID)
     """
@@ -4671,14 +4672,13 @@ async def recording_webhook(request: Request):
             print(f"   ⚠️ Ignoring ghost recording callback: url={recording_url!r}, duration={duration} — this is a Cube no-answer acknowledgment")
             return {"success": True, "message": "Ghost callback ignored (no-answer call)", "ignored": True}
         
-        # ── TIER 1: Extract cube_call_number from outbound campaign record_id ──
+        # ── TIER 1: Extract cube_call_number from Cube's "CampaignName:Number:Sequence"
+        # record_id (e.g. "BotrixAI_BoT:000270806497:38") — same proven approach as
+        # the /getCallStatus webhook: match on the trailing sequence number.
         cube_call_number = None
         try:
-            if webhook_record_id.startswith("BotrixAI_Bot"):
-                number_part = webhook_record_id.replace("BotrixAI_Bot", "")
-                if number_part.endswith("1"):
-                    number_part = number_part[:-1]
-                cube_call_number = int(number_part)
+            if ":" in webhook_record_id:
+                cube_call_number = int(webhook_record_id.split(":")[-1])
                 print(f"   📊 Extracted cube_call_number: {cube_call_number} from {webhook_record_id}")
         except (ValueError, AttributeError) as e:
             print(f"   ⚠️ Could not extract cube_call_number from {webhook_record_id}: {e}")
