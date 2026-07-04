@@ -839,7 +839,7 @@ class VADConfig:
     ENABLED = True  # Enable/disable VAD-based instant interruptions
     
     # Silero VAD Service Settings (HIGH ACCURACY)
-    USE_VAD_SERVICE = True  # Use external VAD WebSocket service
+    USE_VAD_SERVICE = False  # Use external VAD WebSocket service (disabled — not deployed; energy-based fallback used instead)
     # Read from environment for production flexibility (e.g., ws://vad-service:8765 in Docker/K8s)
     VAD_SERVICE_URL = os.getenv("VAD_SERVICE_URL", "ws://localhost:8765")
     SPEECH_THRESHOLD = 0.5  # Speech probability threshold (0.0-1.0)
