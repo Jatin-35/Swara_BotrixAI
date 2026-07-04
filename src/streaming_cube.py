@@ -2980,10 +2980,10 @@ async def send_cube_greeting(websocket, conversation_history, bot_speaking_state
         if customer_name and customer_name != "Customer":
             # Extract first name only (split by space and take first word)
             first_name = customer_name.strip().split()[0] if customer_name.strip() else customer_name
-            greeting_text = f"नमस्ते {first_name} जी, मैं Priya बोल रही हूँ, Swara The Fashion Street \"पंडरी\" Raipur से। क्या आप दो minute available है?"
+            greeting_text = f"नमस्ते {first_name} जी, मैं Priya बोल रही हूँ, Swara The Fashion Street \"पंडरी\" Raipur से। क्या मैं आपसे कुछ seconds बात कर सकती हूँ?"
             print(f"✅ Using personalized greeting with first_name='{first_name}'")
         else:
-            greeting_text = "नमस्ते, मैं Priya बोल रही हूँ, Swara The Fashion Street \"पंडरी\" Raipur से। क्या आप दो minute available है?"
+            greeting_text = "नमस्ते, मैं Priya बोल रही हूँ, Swara The Fashion Street \"पंडरी\" Raipur से। क्या मैं आपसे कुछ seconds बात कर सकती हूँ?"
             print(f"⚠️ Using generic greeting (customer_name was '{customer_name}')")
 
         print(f"🎤 Sending Cube greeting (Hindi+terms): {greeting_text}")
