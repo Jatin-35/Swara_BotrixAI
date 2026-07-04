@@ -66,7 +66,7 @@ AZURE_TTS_VOICE = "hi-IN-AartiNeural"
 
 # Cube VoIP Configuration
 CUBE_CLICK2CALL_URL = os.getenv('CUBE_CLICK2CALL_URL', 'https://cubesoftservices.com/QuickCallRHICL/Click2Call.php')
-CUBE_CAMPAIGN_ID = os.getenv('CUBE_CAMPAIGN_ID', 'Ailife_SIPBot_WebSocket')
+CUBE_CAMPAIGN_ID = os.getenv('CUBE_CAMPAIGN_ID', 'BotrixAI_Bot')
 CUBE_DID = os.getenv('CUBE_DID', '08037367249')
 CUBE_WEBSOCKET_PORT = int(os.getenv('CUBE_WEBSOCKET_PORT', '8040'))
 
@@ -1477,7 +1477,7 @@ async def make_cube_outbound_call(to_number: str, campaign_id: str = None, did: 
             'Phoneno': phoneno,
             'Name': name,
             'Remarks': 'DefaultAiJ',
-            'CampaignID': 'Ailife_SIPBot_WebSocket',
+            'CampaignID': 'BotrixAI_Bot',
             'Priority': 0,
             'Duplicate': 2,
             'Company': '918037368406',
@@ -4674,8 +4674,8 @@ async def recording_webhook(request: Request):
         # ── TIER 1: Extract cube_call_number from outbound campaign record_id ──
         cube_call_number = None
         try:
-            if webhook_record_id.startswith("Ailife_SIPBot_WebSocket"):
-                number_part = webhook_record_id.replace("Ailife_SIPBot_WebSocket", "")
+            if webhook_record_id.startswith("BotrixAI_Bot"):
+                number_part = webhook_record_id.replace("BotrixAI_Bot", "")
                 if number_part.endswith("1"):
                     number_part = number_part[:-1]
                 cube_call_number = int(number_part)
@@ -4756,7 +4756,7 @@ async def cube_call_status_webhook(PhoneNo: str = None, Status: str = None, call
         ?PhoneNo=...&Status=Disconnected&callId=...
 
     callId is NOT a direct match for calls.record_id — Cube sends it as
-    "CampaignName:Number:Sequence" (e.g. "Ailife_SIPBot_WebSocket:000270473693:737"),
+    "CampaignName:Number:Sequence" (e.g. "BotrixAI_Bot:000270473693:737"),
     while our stored record_id is "Number:CampaignName:Sequence" (the order Click2Call
     returns it in). Match on the trailing sequence number (cube_call_number) instead,
     same proven approach already used by the recording webhook.
