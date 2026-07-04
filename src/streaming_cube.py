@@ -1480,7 +1480,7 @@ async def make_cube_outbound_call(to_number: str, campaign_id: str = None, did: 
             'CampaignID': 'BotrixAI_Bot',
             'Priority': 0,
             'Duplicate': 2,
-            'Company': '918037368406',
+            'Company': '918071035148',
         }
         url = f"{CUBE_CLICK2CALL_URL}?{urllib.parse.urlencode(params)}"
 
