@@ -77,6 +77,25 @@ CUBE_CHANNELS = 1  # Mono
 CUBE_CHUNK_SIZE = 3200  # bytes (200ms at 8kHz 16-bit mono)
 CUBE_CHUNK_DELAY = 0.2  # seconds (200ms)
 
+# ── Announcement mode (one-way broadcast) ────────────────────────────────────
+# When True, every /swara_voicebot call simply plays a fixed pre-recorded clip
+# once the line is up, then hangs up — NO STT / LLM / VAD / CLI-DNI / conversation.
+# The outbound call record already exists (created at /make-call) and the
+# /getCallStatus + recording webhooks fire independently, so call tracking stays intact.
+ANNOUNCEMENT_MODE = True
+ANNOUNCEMENT_PCM_PATH = os.path.join(os.path.dirname(__file__), "announcement", "announcement_8k_mono_s16le.pcm")
+_announcement_pcm_cache = None  # lazily-loaded raw PCM bytes (8kHz / 16-bit / mono / LE)
+
+def _load_announcement_pcm() -> bytes:
+    """Load + cache the pre-converted announcement clip (Cube-format raw PCM)."""
+    global _announcement_pcm_cache
+    if _announcement_pcm_cache is None:
+        with open(ANNOUNCEMENT_PCM_PATH, "rb") as _f:
+            _announcement_pcm_cache = _f.read()
+        print(f"📢 Announcement clip loaded: {len(_announcement_pcm_cache)} bytes "
+              f"(~{len(_announcement_pcm_cache)/16000:.1f}s)")
+    return _announcement_pcm_cache
+
 # Cube Binary Protocol Message Types
 CUBE_MSG_HANGUP = 0x00
 CUBE_MSG_AUDIO = 0x10
@@ -3215,7 +3234,31 @@ async def handle_media_stream(websocket: WebSocket):
 
     
     await websocket.accept()
-    
+
+    # ========== ANNOUNCEMENT MODE (one-way broadcast) ==========
+    # Play the fixed pre-recorded clip once the line is up, then hang up.
+    # Skips ALL conversational handling below (CLI-DNI, STT, LLM, VAD, etc.).
+    if ANNOUNCEMENT_MODE:
+        try:
+            pcm = _load_announcement_pcm()
+            # Small guard so Cube is ready to relay audio (avoids clipping the start).
+            await asyncio.sleep(0.5)
+            print(f"📢 Announcement: playing ~{len(pcm)/16000:.1f}s clip, then hanging up")
+            await send_cube_audio(websocket, pcm)   # single-shot send + waits full playback
+            print("📢 Announcement finished — sending hangup")
+            await websocket.send_bytes(b'\x00')      # Cube hangup signal
+            await asyncio.sleep(0.2)                  # let the byte flush over the wire
+        except WebSocketDisconnect:
+            print("📢 Announcement: client disconnected mid-clip")
+        except Exception as e:
+            print(f"❌ Announcement mode error: {e}")
+        finally:
+            try:
+                await websocket.close()
+            except Exception:
+                pass
+        return
+
     # ========== CALL ID LINKING ==========
     # Try to find existing call record (created by /api/make-call) using phone number
     # This ensures conversation is linked to the correct call record
