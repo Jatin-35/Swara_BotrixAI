@@ -65,7 +65,7 @@ AZURE_SPEECH_REGION = "centralindia"
 AZURE_TTS_VOICE = "en-IN-Meera:DragonHDLatestNeural"
 
 # Cube VoIP Configuration
-CUBE_CLICK2CALL_URL = os.getenv('CUBE_CLICK2CALL_URL', 'https://cubesoftservices.com/QuickCallRHICL/Click2Call.php')
+CUBE_CLICK2CALL_URL = 'https://raphsody.in/QuickCallRHICL/Click2Call.php'  # hardcoded — Cube moved off cubesoftservices.com
 CUBE_CAMPAIGN_ID = os.getenv('CUBE_CAMPAIGN_ID', 'BotrixAI_Bot')
 CUBE_DID = os.getenv('CUBE_DID', '08037367249')
 CUBE_WEBSOCKET_PORT = int(os.getenv('CUBE_WEBSOCKET_PORT', '8040'))
