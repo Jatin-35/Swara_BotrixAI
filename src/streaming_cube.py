@@ -3238,13 +3238,28 @@ async def handle_media_stream(websocket: WebSocket):
     # ========== ANNOUNCEMENT MODE (one-way broadcast) ==========
     # Play the fixed pre-recorded clip once the line is up, then hang up.
     # Skips ALL conversational handling below (CLI-DNI, STT, LLM, VAD, etc.).
+    #
+    # HANGUP TIMING: same clip every call, so its duration is known up front.
+    # Rather than trust a tight byte-count wait (risky for a 30-47s blob —
+    # if Cube's own playback buffer drains even slightly slower than our
+    # math assumes, closing the socket "early" leaves the call stuck open;
+    # closing the socket is what actually ends it, per the DEFERRED HANGUP
+    # note elsewhere in this file), just wait clip-duration + a generous
+    # fixed safety margin before hanging up — the same dumb sleep-then-close
+    # pattern already proven by the CALL_MAX_DURATION auto-cutoff below.
+    ANNOUNCEMENT_HANGUP_SAFETY_MARGIN = 5.0  # seconds, generous cushion past clip end
     if ANNOUNCEMENT_MODE:
         try:
             pcm = _load_announcement_pcm()
+            clip_duration = len(pcm) / 16000  # 8kHz * 16-bit = 16000 bytes/sec
             # Small guard so Cube is ready to relay audio (avoids clipping the start).
             await asyncio.sleep(0.5)
-            print(f"📢 Announcement: playing ~{len(pcm)/16000:.1f}s clip, then hanging up")
-            await send_cube_audio(websocket, pcm)   # single-shot send + waits full playback
+            print(f"📢 Announcement: sending {len(pcm)} bytes (~{clip_duration:.1f}s clip)")
+            await websocket.send_bytes(pcm)   # single-shot send
+            wait_time = clip_duration + ANNOUNCEMENT_HANGUP_SAFETY_MARGIN
+            print(f"📢 Announcement: waiting {wait_time:.1f}s ({clip_duration:.1f}s clip + "
+                  f"{ANNOUNCEMENT_HANGUP_SAFETY_MARGIN:.1f}s safety margin) before hangup")
+            await asyncio.sleep(wait_time)
             print("📢 Announcement finished — sending hangup")
             await websocket.send_bytes(b'\x00')      # Cube hangup signal
             await asyncio.sleep(0.2)                  # let the byte flush over the wire
@@ -3255,6 +3270,7 @@ async def handle_media_stream(websocket: WebSocket):
         finally:
             try:
                 await websocket.close()
+                print("📢 Announcement: WebSocket closed — call terminated")
             except Exception:
                 pass
         return
