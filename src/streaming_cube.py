@@ -5246,8 +5246,8 @@ async def export_data_endpoint(start_date: str = None, end_date: str = None):
     Combines calls, leads, analytics, and transcripts.
     """
     try:
-        # Get all calls (filtered by date) — last 500, newest first
-        calls = db.get_all_calls(limit=500, start_date=start_date, end_date=end_date)
+        # Get all calls (filtered by date) — last 1200, newest first
+        calls = db.get_all_calls(limit=1200, start_date=start_date, end_date=end_date)
         
         # Format sessions for frontend
         sessions = []
@@ -5325,8 +5325,8 @@ async def export_data_endpoint(start_date: str = None, end_date: str = None):
             })
 
             
-        # Fetch transcripts from database — keep in sync with the 500-call limit
-        transcripts = db.get_all_transcripts(limit=500, start_date=start_date, end_date=end_date)
+        # Fetch transcripts from database — keep in sync with the 1200-call limit
+        transcripts = db.get_all_transcripts(limit=1200, start_date=start_date, end_date=end_date)
         print(f"📝 Fetched {len(transcripts)} transcripts for export")
         
         stats = db.get_call_stats(start_date=start_date, end_date=end_date)

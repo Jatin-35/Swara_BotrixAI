@@ -44,7 +44,7 @@ export default function Login() {
           className="h-16 w-auto object-contain drop-shadow-lg"
         />
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mt-3">
-          Swara The Fashion Street
+          Outbound Announcement
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
           Sign in to continue

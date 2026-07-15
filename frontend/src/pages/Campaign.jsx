@@ -432,7 +432,7 @@ export default function Campaign() {
   };
 
   const handleStart = async () => {
-    if (!selectedFileId) { showToast("Please select or upload a Swara Excel calling list", "error"); return; }
+    if (!selectedFileId) { showToast("Please select or upload an Excel calling list", "error"); return; }
     setActionLoading(true);
     try {
       await campaignStart({
@@ -507,7 +507,7 @@ export default function Campaign() {
               </button>
               <div>
                 <h1 className="text-lg font-bold text-gray-900 dark:text-white">Campaign Manager</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Swara The Fashion Street</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Outbound Announcement</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -773,10 +773,10 @@ export default function Campaign() {
                   className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
 
-              {/* Swara Excel calling list — pick existing or upload new */}
+              {/* Excel calling list — pick existing or upload new */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Calling List (Swara Excel)
+                  Calling List (Excel)
                   <span className="ml-1 text-gray-400 font-normal text-xs">— same format as the Leads page</span>
                 </label>
                 <FilePicker

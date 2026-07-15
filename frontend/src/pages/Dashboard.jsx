@@ -60,12 +60,12 @@ export default function Dashboard() {
               <a href="https://www.botrixai.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
                 <img
                   src="/header_logo.png"
-                  alt="Swara Logo"
+                  alt="Logo"
                   className="h-8 w-auto object-contain cursor-pointer"
                 />
               </a>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Swara The Fashion Street Analytics
+                Outbound Announcement Analytics
               </h1>
             </div>
 

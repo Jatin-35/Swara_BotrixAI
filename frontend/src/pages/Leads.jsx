@@ -204,7 +204,7 @@ export default function Leads() {
                                 <ArrowLeft className="h-5 w-5" />
                             </button>
                             <img src="/header_logo.png" alt="Logo" className="h-8 w-auto object-contain" />
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Swara Calling Leads</h1>
+                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Calling Leads</h1>
                             {rows.length > 0 && (
                                 <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
                                     {counts.total} rows · {counts.pending} pending
