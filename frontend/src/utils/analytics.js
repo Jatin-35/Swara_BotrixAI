@@ -8,8 +8,15 @@ export const calculateCallMetrics = (sessions) => {
   const abandonedCalls = sessions.filter(s => s.status === 'abandoned').length;
   const failedCalls = sessions.filter(s => s.status === 'failed').length;
 
-  const totalDuration = sessions.reduce((sum, s) => sum + s.duration_seconds, 0);
-  const avgDuration = totalDuration / totalSessions;
+  const totalDuration = sessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0);
+  // Average over calls that actually have a duration (i.e. connected), not over
+  // totalSessions — otherwise not-connected calls (duration=0) dilute the average
+  // and it no longer reflects how long calls last (matches the backend's
+  // avg_duration_seconds logic in /api/export).
+  const connectedDurations = sessions.filter(s => (s.duration_seconds || 0) > 0);
+  const avgDuration = connectedDurations.length > 0
+    ? connectedDurations.reduce((sum, s) => sum + s.duration_seconds, 0) / connectedDurations.length
+    : 0;
 
   const successRate = (completedCalls / totalSessions) * 100;
   const abandonmentRate = (abandonedCalls / totalSessions) * 100;
