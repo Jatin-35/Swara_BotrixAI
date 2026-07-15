@@ -5512,7 +5512,7 @@ async def campaign_start(request: Request):
             return {"success": False, "error": "No leads provided (send 'leads' or 'lead_file_id')."}
 
         # Clamp to safe values
-        delay_seconds  = max(120, min(delay_seconds, 180))
+        delay_seconds  = max(90, min(delay_seconds, 180))
         max_concurrent = max(2, min(max_concurrent, 4))
 
         retry_on_busy       = bool(body.get("retry_on_busy",       True))
