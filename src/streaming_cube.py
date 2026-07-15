@@ -96,6 +96,20 @@ def _load_announcement_pcm() -> bytes:
               f"(~{len(_announcement_pcm_cache)/16000:.1f}s)")
     return _announcement_pcm_cache
 
+# Text of what the announcement clip says — logged to conversation_logs so Call
+# History / exports show the transcript, purely for record-keeping (does NOT
+# affect the actual audio, which is already a fixed pre-recorded clip).
+ANNOUNCEMENT_TRANSCRIPT_TEXT = (
+    "नमस्ते, Chhattisgarh Solar Welfare Association की ओर से आपको 22 और 23 August को "
+    "Raipur में होने वाले Samvad 2026 में सादर आमंत्रित किया जाता है। इस भव्य आयोजन में "
+    "CSP, DCL और CREDA के senior officers, देश की leading solar manufacturing companies "
+    "के exhibition stalls, तथा छत्तीसगढ़ की पहली Solar Vendors and System Integrators "
+    "Directory का भव्य विमोचन किया जाएगा। कृपया ध्यान दें, इस event में entry केवल "
+    "Association के members के लिए ही रहेगी। अगर आपने अभी तक membership नहीं ली है, तो "
+    "आज ही हमसे contact करें और Samvad 2026 का हिस्सा बनें। Samvad 2026 — छत्तीसगढ़ के "
+    "solar उद्योग का सबसे बड़ा platform। धन्यवाद, Chhattisgarh Solar Welfare Association।"
+)
+
 # Cube Binary Protocol Message Types
 CUBE_MSG_HANGUP = 0x00
 CUBE_MSG_AUDIO = 0x10
@@ -3255,6 +3269,17 @@ async def handle_media_stream(websocket: WebSocket):
             # Small guard so Cube is ready to relay audio (avoids clipping the start).
             await asyncio.sleep(0.5)
             print(f"📢 Announcement: sending {len(pcm)} bytes (~{clip_duration:.1f}s clip)")
+            # Fire-and-forget transcript log — runs in the background, does NOT
+            # block or delay the audio send below (no latency impact).
+            _announcement_call_id = str(uuid.uuid4())
+            asyncio.create_task(asyncio.to_thread(
+                db.log_conversation,
+                record_id=_announcement_call_id,
+                speaker='bot',
+                message=ANNOUNCEMENT_TRANSCRIPT_TEXT,
+                message_type='speech',
+                metadata={'type': 'announcement'},
+            ))
             await websocket.send_bytes(pcm)   # single-shot send
             wait_time = clip_duration + ANNOUNCEMENT_HANGUP_SAFETY_MARGIN
             print(f"📢 Announcement: waiting {wait_time:.1f}s ({clip_duration:.1f}s clip + "
