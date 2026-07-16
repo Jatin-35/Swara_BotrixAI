@@ -1270,6 +1270,7 @@ async def lifespan(app: FastAPI):
         _execute("ALTER TABLE calls ADD COLUMN IF NOT EXISTS call_summary               TEXT")
         _execute("ALTER TABLE calls ADD COLUMN IF NOT EXISTS cube_status_raw            TEXT")
         _execute("ALTER TABLE calls ADD COLUMN IF NOT EXISTS campaign_db_id             BIGINT")
+        _execute("CREATE INDEX IF NOT EXISTS idx_calls_campaign_db_id ON calls (campaign_db_id)")
         _execute("ALTER TABLE campaign_leads ADD COLUMN IF NOT EXISTS record_id        TEXT")
         _execute("ALTER TABLE campaign_leads ADD COLUMN IF NOT EXISTS lead_file_row_id BIGINT")
         print("✅ DB migrations applied")
@@ -5249,6 +5250,13 @@ async def export_data_endpoint(start_date: str = None, end_date: str = None, cam
     for that campaign run (no 1200-row cap) — a run's data shouldn't be
     truncated just because it exceeds the default export window.
     """
+    # This does a lot of synchronous DB work (potentially thousands of rows +
+    # N+1 lookups per row) — run it in a worker thread so it can never block
+    # the single event loop that also drives live-call WebSocket handling.
+    return await asyncio.to_thread(_build_export_data, start_date, end_date, campaign_id)
+
+
+def _build_export_data(start_date: str = None, end_date: str = None, campaign_id: int = None):
     try:
         # Get all calls — capped at 1200 for date-range browsing, uncapped when
         # scoped to one campaign run (campaign_id overrides start_date/end_date)

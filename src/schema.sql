@@ -53,6 +53,7 @@ ALTER TABLE calls ADD COLUMN IF NOT EXISTS cube_status_raw TEXT;
 -- History / Leads views show a "Campaign" badge and the Campaign page bridge
 -- back to the rich post-call data in this row.
 ALTER TABLE calls ADD COLUMN IF NOT EXISTS campaign_db_id BIGINT;
+CREATE INDEX IF NOT EXISTS idx_calls_campaign_db_id ON calls (campaign_db_id);
 
 -- Post-call analysis results (written by _faber_lead_writeback after every call).
 -- Stored here so each call has its own row — avoids data loss when the same lead
