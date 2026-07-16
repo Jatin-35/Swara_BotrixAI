@@ -19,13 +19,17 @@ export default function Dashboard() {
     loading,
     error,
     dateFrom,
-    dateTo
+    dateTo,
+    campaigns,
+    selectedCampaignId
   } = useAppStore(state => state.dashboard);
 
   // Select actions from the root store
   const {
     setDashboardDateFrom,
     setDashboardDateTo,
+    setDashboardSelectedCampaignId,
+    fetchCampaignList,
     fetchDashboardData
   } = useAppStore(state => state);
 
@@ -37,7 +41,13 @@ export default function Dashboard() {
     if (!data) {
       fetchDashboardData();
     }
+    fetchCampaignList();
   }, []);
+
+  const handleCampaignChange = (e) => {
+    const value = e.target.value;
+    setDashboardSelectedCampaignId(value ? Number(value) : null);
+  };
 
   const handleFetch = () => {
     fetchDashboardData();
@@ -172,12 +182,14 @@ export default function Dashboard() {
                   </label>
                   <input
                     type="date"
+                    disabled={!!selectedCampaignId}
                     className="
-                      border border-gray-300 dark:border-gray-600 
-                      rounded-md px-3 py-2 text-sm 
-                      bg-white dark:bg-gray-700 
-                      text-gray-900 dark:text-white 
+                      border border-gray-300 dark:border-gray-600
+                      rounded-md px-3 py-2 text-sm
+                      bg-white dark:bg-gray-700
+                      text-gray-900 dark:text-white
                       focus:outline-none focus:ring-2 focus:ring-blue-500
+                      disabled:opacity-50 disabled:cursor-not-allowed
                     "
                     value={dateFrom}
                     onChange={(e) => setDashboardDateFrom(e.target.value)}
@@ -190,16 +202,43 @@ export default function Dashboard() {
                   </label>
                   <input
                     type="date"
+                    disabled={!!selectedCampaignId}
                     className="
-                      border border-gray-300 dark:border-gray-600 
-                      rounded-md px-3 py-2 text-sm 
-                      bg-white dark:bg-gray-700 
-                      text-gray-900 dark:text-white 
+                      border border-gray-300 dark:border-gray-600
+                      rounded-md px-3 py-2 text-sm
+                      bg-white dark:bg-gray-700
+                      text-gray-900 dark:text-white
                       focus:outline-none focus:ring-2 focus:ring-blue-500
+                      disabled:opacity-50 disabled:cursor-not-allowed
                     "
                     value={dateTo}
                     onChange={(e) => setDashboardDateTo(e.target.value)}
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Campaign Run
+                  </label>
+                  <select
+                    className="
+                      border border-gray-300 dark:border-gray-600
+                      rounded-md px-3 py-2 text-sm
+                      bg-white dark:bg-gray-700
+                      text-gray-900 dark:text-white
+                      focus:outline-none focus:ring-2 focus:ring-blue-500
+                      max-w-[220px]
+                    "
+                    value={selectedCampaignId ?? ""}
+                    onChange={handleCampaignChange}
+                  >
+                    <option value="">All (date range)</option>
+                    {campaigns.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} — {c.started_at ? new Date(c.started_at).toLocaleDateString() : ""}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
               </div>

@@ -2,8 +2,11 @@ const BASE_URL = import.meta.env.VITE_API_URL || "https://apivoiceagentservice-b
 
 console.log('📡 API Base URL:', BASE_URL);
 
-export async function fetchExportData(dateFrom, dateTo) {
-  const url = `${BASE_URL}/export?start_date=${dateFrom}&end_date=${dateTo}`;
+export async function fetchExportData(dateFrom, dateTo, campaignId = null) {
+  // A selected campaign overrides the date range — one run's data, not a date window
+  const url = campaignId
+    ? `${BASE_URL}/export?campaign_id=${campaignId}`
+    : `${BASE_URL}/export?start_date=${dateFrom}&end_date=${dateTo}`;
 
   const response = await fetch(url);
   if (!response.ok) {
@@ -180,7 +183,7 @@ export const campaignResume  = ()     => campaignFetch("/api/campaign/resume",  
 export const campaignStop    = ()     => campaignFetch("/api/campaign/stop",     "POST");
 export const campaignAddLead = (body) => campaignFetch("/api/campaign/add-lead", "POST", body);
 export const campaignStatus  = ()     => campaignFetch("/api/campaign/status");
-export const campaignHistory = ()     => campaignFetch("/api/campaign/history");
+export const campaignHistory = (limit = 200) => campaignFetch(`/api/campaign/history?limit=${limit}`);
 export const campaignLeads   = (id)   => campaignFetch(`/api/campaign/${id}/leads`);
 export const campaignLeadsRich = (id) => campaignFetch(`/api/campaign/${id}/leads-rich`);
 export const campaignReportUrl = (id) => `${CAMPAIGN_BASE}/api/campaign/${id}/report.csv`;

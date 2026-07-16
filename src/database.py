@@ -394,12 +394,16 @@ def log_console(
 
 # ==================== QUERY FUNCTIONS ====================
 
-def get_all_calls(limit: int = 50, offset: int = 0, start_date: str = None, end_date: str = None) -> List[Dict[str, Any]]:
+def get_all_calls(limit: int = 50, offset: int = 0, start_date: str = None, end_date: str = None, campaign_id: int = None) -> List[Dict[str, Any]]:
     where, params = [], []
-    if start_date:
-        where.append("call_initiated_at >= %s"); params.append(start_date)
-    if end_date:
-        where.append("call_initiated_at <= %s"); params.append(f"{end_date}T23:59:59")
+    if campaign_id is not None:
+        # Campaign filter overrides date range — a specific run's calls, not a date window
+        where.append("campaign_db_id = %s"); params.append(campaign_id)
+    else:
+        if start_date:
+            where.append("call_initiated_at >= %s"); params.append(start_date)
+        if end_date:
+            where.append("call_initiated_at <= %s"); params.append(f"{end_date}T23:59:59")
     clause = f"WHERE {' AND '.join(where)}" if where else ""
     params += [limit, offset]
     return _fetchall(
@@ -668,12 +672,15 @@ def get_lead_by_phone(phone_number: str) -> Optional[Dict[str, Any]]:
     )
 
 
-def get_all_transcripts(limit: int = 100, start_date: str = None, end_date: str = None) -> List[Dict[str, Any]]:
+def get_all_transcripts(limit: int = 100, start_date: str = None, end_date: str = None, campaign_id: int = None) -> List[Dict[str, Any]]:
     where, params = [], []
-    if start_date:
-        where.append("call_initiated_at >= %s"); params.append(start_date)
-    if end_date:
-        where.append("call_initiated_at <= %s"); params.append(f"{end_date}T23:59:59")
+    if campaign_id is not None:
+        where.append("campaign_db_id = %s"); params.append(campaign_id)
+    else:
+        if start_date:
+            where.append("call_initiated_at >= %s"); params.append(start_date)
+        if end_date:
+            where.append("call_initiated_at <= %s"); params.append(f"{end_date}T23:59:59")
     clause = f"WHERE {' AND '.join(where)}" if where else ""
     params.append(limit)
 
@@ -706,12 +713,15 @@ def get_all_transcripts(limit: int = 100, start_date: str = None, end_date: str 
     return transcripts
 
 
-def get_call_stats(start_date: str = None, end_date: str = None) -> Dict[str, Any]:
+def get_call_stats(start_date: str = None, end_date: str = None, campaign_id: int = None) -> Dict[str, Any]:
     where, params = [], []
-    if start_date:
-        where.append("call_initiated_at >= %s"); params.append(start_date)
-    if end_date:
-        where.append("call_initiated_at <= %s"); params.append(f"{end_date}T23:59:59")
+    if campaign_id is not None:
+        where.append("campaign_db_id = %s"); params.append(campaign_id)
+    else:
+        if start_date:
+            where.append("call_initiated_at >= %s"); params.append(start_date)
+        if end_date:
+            where.append("call_initiated_at <= %s"); params.append(f"{end_date}T23:59:59")
     clause = f"WHERE {' AND '.join(where)}" if where else ""
 
     all_calls = _fetchall(f"SELECT call_status, call_duration_seconds FROM calls {clause}", params)

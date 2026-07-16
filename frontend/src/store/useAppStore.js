@@ -13,7 +13,7 @@
  */
 
 import { create } from "zustand";
-import { fetchExportData, fetchLeads, refreshLeads } from "../utils/api";
+import { fetchExportData, fetchLeads, refreshLeads, campaignHistory } from "../utils/api";
 
 const useAppStore = create((set, get) => ({
 
@@ -31,6 +31,8 @@ const useAppStore = create((set, get) => ({
         })(),
         dateTo: new Date().toISOString().split("T")[0],
         lastFetchedAt: null,
+        campaigns: [],
+        selectedCampaignId: null,
     },
 
     setDashboardDateFrom: (dateFrom) =>
@@ -39,16 +41,33 @@ const useAppStore = create((set, get) => ({
     setDashboardDateTo: (dateTo) =>
         set((s) => ({ dashboard: { ...s.dashboard, dateTo } })),
 
+    // Selecting a campaign overrides the date range for the next fetch; clearing
+    // it (null) reverts to date-range mode.
+    setDashboardSelectedCampaignId: (selectedCampaignId) =>
+        set((s) => ({ dashboard: { ...s.dashboard, selectedCampaignId } })),
+
+    fetchCampaignList: async () => {
+        try {
+            const result = await campaignHistory();
+            if (result?.campaigns) {
+                set((s) => ({ dashboard: { ...s.dashboard, campaigns: result.campaigns } }));
+            }
+        } catch (err) {
+            console.error("❌ fetchCampaignList error:", err);
+        }
+    },
+
     fetchDashboardData: async () => {
         const { dashboard } = get();
         console.log("🚀 fetchDashboardData started", {
             from: dashboard.dateFrom,
-            to: dashboard.dateTo
+            to: dashboard.dateTo,
+            campaignId: dashboard.selectedCampaignId
         });
 
         set((s) => ({ dashboard: { ...s.dashboard, loading: true, error: null } }));
         try {
-            const result = await fetchExportData(dashboard.dateFrom, dashboard.dateTo);
+            const result = await fetchExportData(dashboard.dateFrom, dashboard.dateTo, dashboard.selectedCampaignId);
             console.log("✅ fetchDashboardData result:", result);
 
             if (!result) throw new Error("No data returned from server");

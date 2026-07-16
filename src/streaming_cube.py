@@ -5240,14 +5240,20 @@ def filename_override(requested: str, default_name: str) -> str:
 
 
 @app.get("/api/export")
-async def export_data_endpoint(start_date: str = None, end_date: str = None):
+async def export_data_endpoint(start_date: str = None, end_date: str = None, campaign_id: int = None):
     """
     Format data for the frontend dashboard.
     Combines calls, leads, analytics, and transcripts.
+
+    campaign_id, when given, overrides the date range and returns every call
+    for that campaign run (no 1200-row cap) — a run's data shouldn't be
+    truncated just because it exceeds the default export window.
     """
     try:
-        # Get all calls (filtered by date) — last 1200, newest first
-        calls = db.get_all_calls(limit=1200, start_date=start_date, end_date=end_date)
+        # Get all calls — capped at 1200 for date-range browsing, uncapped when
+        # scoped to one campaign run (campaign_id overrides start_date/end_date)
+        row_limit = 1_000_000 if campaign_id is not None else 1200
+        calls = db.get_all_calls(limit=row_limit, start_date=start_date, end_date=end_date, campaign_id=campaign_id)
         
         # Format sessions for frontend
         sessions = []
@@ -5325,11 +5331,11 @@ async def export_data_endpoint(start_date: str = None, end_date: str = None):
             })
 
             
-        # Fetch transcripts from database — keep in sync with the 1200-call limit
-        transcripts = db.get_all_transcripts(limit=1200, start_date=start_date, end_date=end_date)
+        # Fetch transcripts from database — keep in sync with the calls row_limit above
+        transcripts = db.get_all_transcripts(limit=row_limit, start_date=start_date, end_date=end_date, campaign_id=campaign_id)
         print(f"📝 Fetched {len(transcripts)} transcripts for export")
-        
-        stats = db.get_call_stats(start_date=start_date, end_date=end_date)
+
+        stats = db.get_call_stats(start_date=start_date, end_date=end_date, campaign_id=campaign_id)
         
         # Calculate summary for frontend
         total_calls = len(sessions)
