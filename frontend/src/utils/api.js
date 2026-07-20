@@ -2,11 +2,19 @@ const BASE_URL = import.meta.env.VITE_API_URL || "https://apivoiceagentservice-b
 
 console.log('📡 API Base URL:', BASE_URL);
 
-export async function fetchExportData(dateFrom, dateTo, campaignId = null) {
-  // A selected campaign overrides the date range — one run's data, not a date window
-  const url = campaignId
-    ? `${BASE_URL}/export?campaign_id=${campaignId}`
-    : `${BASE_URL}/export?start_date=${dateFrom}&end_date=${dateTo}`;
+export async function fetchExportData(dateFrom, dateTo, campaignId = null, callScope = null) {
+  // A selected campaign overrides the date range — one run's data, not a date window.
+  // callScope ("campaign" | "normal") narrows a date-range query instead — ignored
+  // once campaignId is set, since that already implies "this one campaign's calls".
+  let url;
+  if (campaignId) {
+    url = `${BASE_URL}/export?campaign_id=${campaignId}`;
+  } else {
+    url = `${BASE_URL}/export?start_date=${dateFrom}&end_date=${dateTo}`;
+    if (callScope && callScope !== "both") {
+      url += `&call_scope=${callScope}`;
+    }
+  }
 
   const response = await fetch(url);
   if (!response.ok) {

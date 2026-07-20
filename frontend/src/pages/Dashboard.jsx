@@ -21,7 +21,8 @@ export default function Dashboard() {
     dateFrom,
     dateTo,
     campaigns,
-    selectedCampaignId
+    selectedCampaignId,
+    callScope
   } = useAppStore(state => state.dashboard);
 
   // Select actions from the root store
@@ -29,6 +30,7 @@ export default function Dashboard() {
     setDashboardDateFrom,
     setDashboardDateTo,
     setDashboardSelectedCampaignId,
+    setDashboardCallScope,
     fetchCampaignList,
     fetchDashboardData
   } = useAppStore(state => state);
@@ -214,6 +216,37 @@ export default function Dashboard() {
                     value={dateTo}
                     onChange={(e) => setDashboardDateTo(e.target.value)}
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Call Type
+                  </label>
+                  <div className="inline-flex rounded-md border border-gray-300 dark:border-gray-600 overflow-hidden">
+                    {[
+                      { id: "both", label: "Both" },
+                      { id: "campaign", label: "Campaign Only" },
+                      { id: "normal", label: "Normal" },
+                    ].map((opt, i) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        disabled={!!selectedCampaignId}
+                        onClick={() => setDashboardCallScope(opt.id)}
+                        className={`
+                          px-3 py-2 text-sm font-medium transition-colors
+                          ${i > 0 ? "border-l border-gray-300 dark:border-gray-600" : ""}
+                          ${callScope === opt.id
+                            ? "bg-blue-600 text-white dark:bg-blue-500"
+                            : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+                          }
+                          disabled:opacity-50 disabled:cursor-not-allowed
+                        `}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>

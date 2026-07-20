@@ -33,6 +33,10 @@ const useAppStore = create((set, get) => ({
         lastFetchedAt: null,
         campaigns: [],
         selectedCampaignId: null,
+        // "both" (default) | "campaign" | "normal" — narrows a date-range fetch by
+        // whether a call belongs to any campaign; ignored once a specific campaign
+        // is selected above.
+        callScope: "both",
     },
 
     setDashboardDateFrom: (dateFrom) =>
@@ -45,6 +49,9 @@ const useAppStore = create((set, get) => ({
     // it (null) reverts to date-range mode.
     setDashboardSelectedCampaignId: (selectedCampaignId) =>
         set((s) => ({ dashboard: { ...s.dashboard, selectedCampaignId } })),
+
+    setDashboardCallScope: (callScope) =>
+        set((s) => ({ dashboard: { ...s.dashboard, callScope } })),
 
     fetchCampaignList: async () => {
         try {
@@ -62,12 +69,13 @@ const useAppStore = create((set, get) => ({
         console.log("🚀 fetchDashboardData started", {
             from: dashboard.dateFrom,
             to: dashboard.dateTo,
-            campaignId: dashboard.selectedCampaignId
+            campaignId: dashboard.selectedCampaignId,
+            callScope: dashboard.callScope
         });
 
         set((s) => ({ dashboard: { ...s.dashboard, loading: true, error: null } }));
         try {
-            const result = await fetchExportData(dashboard.dateFrom, dashboard.dateTo, dashboard.selectedCampaignId);
+            const result = await fetchExportData(dashboard.dateFrom, dashboard.dateTo, dashboard.selectedCampaignId, dashboard.callScope);
             console.log("✅ fetchDashboardData result:", result);
 
             if (!result) throw new Error("No data returned from server");

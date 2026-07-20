@@ -5241,27 +5241,30 @@ def filename_override(requested: str, default_name: str) -> str:
 
 
 @app.get("/api/export")
-async def export_data_endpoint(start_date: str = None, end_date: str = None, campaign_id: int = None):
+async def export_data_endpoint(start_date: str = None, end_date: str = None, campaign_id: int = None, call_scope: str = None):
     """
     Format data for the frontend dashboard.
     Combines calls, leads, analytics, and transcripts.
 
     campaign_id, when given, overrides the date range and returns every call
-    for that campaign run (no 1200-row cap) — a run's data shouldn't be
-    truncated just because it exceeds the default export window.
+    for that campaign run. call_scope ("campaign" | "normal") narrows a
+    date-range query by whether a call belongs to any campaign — it combines
+    WITH the date range rather than overriding it, and is ignored when
+    campaign_id is set. Neither path caps rows anymore — a run or date range
+    shouldn't be truncated just because it exceeds some default window.
     """
     # This does a lot of synchronous DB work (potentially thousands of rows +
     # N+1 lookups per row) — run it in a worker thread so it can never block
     # the single event loop that also drives live-call WebSocket handling.
-    return await asyncio.to_thread(_build_export_data, start_date, end_date, campaign_id)
+    return await asyncio.to_thread(_build_export_data, start_date, end_date, campaign_id, call_scope)
 
 
-def _build_export_data(start_date: str = None, end_date: str = None, campaign_id: int = None):
+def _build_export_data(start_date: str = None, end_date: str = None, campaign_id: int = None, call_scope: str = None):
     try:
-        # Get all calls — capped at 1200 for date-range browsing, uncapped when
-        # scoped to one campaign run (campaign_id overrides start_date/end_date)
-        row_limit = 1_000_000 if campaign_id is not None else 1200
-        calls = db.get_all_calls(limit=row_limit, start_date=start_date, end_date=end_date, campaign_id=campaign_id)
+        # Effectively uncapped for both date-range and campaign-scoped queries —
+        # 1_000_000 is a pragmatic ceiling, not a real expectation of that many rows
+        row_limit = 1_000_000
+        calls = db.get_all_calls(limit=row_limit, start_date=start_date, end_date=end_date, campaign_id=campaign_id, call_scope=call_scope)
         
         # Format sessions for frontend
         sessions = []
@@ -5340,10 +5343,10 @@ def _build_export_data(start_date: str = None, end_date: str = None, campaign_id
 
             
         # Fetch transcripts from database — keep in sync with the calls row_limit above
-        transcripts = db.get_all_transcripts(limit=row_limit, start_date=start_date, end_date=end_date, campaign_id=campaign_id)
+        transcripts = db.get_all_transcripts(limit=row_limit, start_date=start_date, end_date=end_date, campaign_id=campaign_id, call_scope=call_scope)
         print(f"📝 Fetched {len(transcripts)} transcripts for export")
 
-        stats = db.get_call_stats(start_date=start_date, end_date=end_date, campaign_id=campaign_id)
+        stats = db.get_call_stats(start_date=start_date, end_date=end_date, campaign_id=campaign_id, call_scope=call_scope)
         
         # Calculate summary for frontend
         total_calls = len(sessions)
