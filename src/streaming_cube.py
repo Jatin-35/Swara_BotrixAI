@@ -3210,11 +3210,13 @@ async def handle_media_stream(websocket: WebSocket):
     # =====================================================================
     _registry_lead_id   = None
     _registry_lead_data = {}
+    _outbound_registry_matched = False   # True only on a confirmed registry match
 
     if phone_number:
         # Exact-phone claim is always safe (no FIFO ambiguity)
         _outbound_ctx = claim_outbound_call(phone=phone_number)
         if _outbound_ctx:
+            _outbound_registry_matched = True
             if not customer_name:
                 customer_name = _outbound_ctx.name
             if not company_name:
@@ -3241,6 +3243,80 @@ async def handle_media_stream(websocket: WebSocket):
 
     
     await websocket.accept()
+
+    # ========== INBOUND-CALL DETECTION (ANNOUNCEMENT_MODE only) ==========
+    # Under ANNOUNCEMENT_MODE the code below (CALL ID LINKING / CLI-DNI handling)
+    # never runs, so a genuine inbound call would otherwise get no `calls` row
+    # at all — invisible on the dashboard. Outbound calls already have a row
+    # from /make-call dispatch time, so we must NOT blindly create one here for
+    # every connection — that would duplicate outbound calls as fake "Inbound"
+    # rows. The only reliable signal is Cube's CLI/DNI packet (0x20), checked
+    # against the outbound registry: a match means "ours, already tracked";
+    # no match (or no packet within the wait) means genuinely inbound.
+    if ANNOUNCEMENT_MODE:
+        _inbound_phone = None
+        if phone_number and not _outbound_registry_matched:
+            # Already resolved via URL query param (local testing) — no registry match.
+            _inbound_phone = phone_number
+        elif not phone_number:
+            # Production case — peek briefly for the CLI/DNI packet before deciding.
+            CLI_DNI_WAIT_TIMEOUT = 2.0  # seconds
+            try:
+                loop = asyncio.get_running_loop()
+                deadline = loop.time() + CLI_DNI_WAIT_TIMEOUT
+                while True:
+                    remaining = deadline - loop.time()
+                    if remaining <= 0:
+                        print(f"⏳ No CLI/DNI within {CLI_DNI_WAIT_TIMEOUT:.0f}s — caller unknown, "
+                              f"skipping call record (matches legacy 'no duplicate unknown entries' behavior)")
+                        break
+                    message = await asyncio.wait_for(websocket.receive_bytes(), timeout=remaining)
+                    if not message:
+                        continue
+                    msg_type = message[0] if len(message) > 1 else CUBE_MSG_AUDIO
+                    if msg_type != CUBE_MSG_CLI_DNI:
+                        continue  # ignore audio/other packets during this brief window
+                    try:
+                        cli_dni_data = json.loads(message[1:].decode('utf-8', errors='ignore').replace('\x00', ''))
+                        cli_phone = (
+                            cli_dni_data.get('cli') or cli_dni_data.get('CLI') or
+                            cli_dni_data.get('phone') or cli_dni_data.get('phone_number') or
+                            cli_dni_data.get('Phoneno', '')
+                        )
+                        clean_cli = ''.join(filter(str.isdigit, str(cli_phone)))
+                        if len(clean_cli) >= 10:
+                            _inbound_phone = clean_cli[-10:]
+                            print(f"📠 CLI/DNI resolved during inbound-detection: {_inbound_phone}")
+                    except Exception as parse_err:
+                        print(f"⚠️ Failed to parse CLI/DNI during inbound-detection: {parse_err}")
+                    break  # got the CLI/DNI packet (parsed or not) — stop waiting
+            except asyncio.TimeoutError:
+                print(f"⏳ No CLI/DNI within {CLI_DNI_WAIT_TIMEOUT:.0f}s — caller unknown, skipping call record")
+            except WebSocketDisconnect:
+                print("🔌 Client disconnected while waiting for CLI/DNI")
+                return
+            except Exception as e:
+                print(f"⚠️ Error while peeking for CLI/DNI: {e}")
+
+            if _inbound_phone:
+                _outbound_ctx_check = claim_outbound_call(phone=_inbound_phone)
+                if _outbound_ctx_check:
+                    # Actually one of ours — its row already exists from dispatch time.
+                    _inbound_phone = None
+
+        if _inbound_phone:
+            try:
+                _inbound_call_id = str(uuid.uuid4())
+                db.create_call(
+                    record_id=_inbound_call_id,
+                    phone_number=_inbound_phone,
+                    customer_name="Inbound",
+                    campaign_id=CUBE_CAMPAIGN_ID,
+                )
+                db.update_call_status(_inbound_call_id, 'connected')
+                print(f"📥 Inbound call recorded: {_inbound_phone} -> {_inbound_call_id}")
+            except Exception as db_err:
+                print(f"⚠️ Could not create inbound call record: {db_err}")
 
     # ========== ANNOUNCEMENT MODE (one-way broadcast) ==========
     # Play the fixed pre-recorded clip once the line is up, then hang up.
