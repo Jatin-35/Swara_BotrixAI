@@ -3154,6 +3154,44 @@ def _detect_call_outcome(conversation_history: list) -> tuple:
     return "Inconclusive", conclusion
 
 
+async def _hold_or_wait_for_early_end(websocket: WebSocket, hold_seconds: float) -> bool:
+    """
+    Wait up to `hold_seconds`, but return as soon as the call actually ends —
+    either Cube sends its own hangup byte (0x00) or the connection disconnects
+    — whichever comes first. Used by ANNOUNCEMENT_MODE's hangup timing so an
+    inbound call gets marked 'completed' (call_ended_at) within ~1s of the real
+    call ending, not only after our own fixed wait — Cube's recording webhook
+    is a one-shot notification that can arrive almost immediately after the
+    real call ends, and it can only match a row whose call_ended_at is already
+    set (see get_call_by_duration_and_recency's Tier-3 fallback).
+
+    Returns True if it returned early (caller should skip sending its own
+    hangup — the call is already over). Returns False if the full duration
+    elapsed with the connection still open. Re-raises WebSocketDisconnect so
+    callers' existing except blocks keep handling it exactly as before.
+    """
+    async def _watch():
+        while True:
+            message = await websocket.receive_bytes()
+            if message and message[0] == CUBE_MSG_HANGUP:
+                return  # Cube signaled hangup — call is over
+
+    sleep_task  = asyncio.create_task(asyncio.sleep(hold_seconds))
+    watch_task  = asyncio.create_task(_watch())
+    done, pending = await asyncio.wait({sleep_task, watch_task}, return_when=asyncio.FIRST_COMPLETED)
+    for t in pending:
+        t.cancel()
+    if pending:
+        await asyncio.gather(*pending, return_exceptions=True)
+
+    if watch_task in done:
+        exc = watch_task.exception()
+        if exc:
+            raise exc
+        return True
+    return False
+
+
 # ==================== ROUTES ====================
 
 @app.websocket("/swara_voicebot")
@@ -3341,11 +3379,15 @@ async def handle_media_stream(websocket: WebSocket):
         # side, so we send no audio at all; just keep the line open, then hang up
         # the same proven way (0x00 byte + close) as the audio-clip path below.
         try:
-            print(f"🔇 Silent hold: holding line for {ANNOUNCEMENT_SILENT_HOLD_SECONDS:.0f}s, no audio sent")
-            await asyncio.sleep(ANNOUNCEMENT_SILENT_HOLD_SECONDS)
-            print("🔇 Silent hold finished — sending hangup")
-            await websocket.send_bytes(b'\x00')      # Cube hangup signal
-            await asyncio.sleep(0.2)                  # let the byte flush over the wire
+            print(f"🔇 Silent hold: holding line for up to {ANNOUNCEMENT_SILENT_HOLD_SECONDS:.0f}s "
+                  f"(or until the call ends on Cube's side), no audio sent")
+            ended_early = await _hold_or_wait_for_early_end(websocket, ANNOUNCEMENT_SILENT_HOLD_SECONDS)
+            if ended_early:
+                print("🔇 Silent hold: call already ended on Cube's side — skipping our own hangup send")
+            else:
+                print("🔇 Silent hold finished — sending hangup")
+                await websocket.send_bytes(b'\x00')      # Cube hangup signal
+                await asyncio.sleep(0.2)                  # let the byte flush over the wire
         except WebSocketDisconnect:
             print("🔇 Silent hold: client disconnected mid-hold")
         except Exception as e:
@@ -3373,12 +3415,16 @@ async def handle_media_stream(websocket: WebSocket):
             print(f"📢 Announcement: sending {len(pcm)} bytes (~{clip_duration:.1f}s clip)")
             await websocket.send_bytes(pcm)   # single-shot send
             wait_time = clip_duration + ANNOUNCEMENT_HANGUP_SAFETY_MARGIN
-            print(f"📢 Announcement: waiting {wait_time:.1f}s ({clip_duration:.1f}s clip + "
-                  f"{ANNOUNCEMENT_HANGUP_SAFETY_MARGIN:.1f}s safety margin) before hangup")
-            await asyncio.sleep(wait_time)
-            print("📢 Announcement finished — sending hangup")
-            await websocket.send_bytes(b'\x00')      # Cube hangup signal
-            await asyncio.sleep(0.2)                  # let the byte flush over the wire
+            print(f"📢 Announcement: waiting up to {wait_time:.1f}s ({clip_duration:.1f}s clip + "
+                  f"{ANNOUNCEMENT_HANGUP_SAFETY_MARGIN:.1f}s safety margin), or until the call "
+                  f"ends on Cube's side, before hangup")
+            ended_early = await _hold_or_wait_for_early_end(websocket, wait_time)
+            if ended_early:
+                print("📢 Announcement: call already ended on Cube's side — skipping our own hangup send")
+            else:
+                print("📢 Announcement finished — sending hangup")
+                await websocket.send_bytes(b'\x00')      # Cube hangup signal
+                await asyncio.sleep(0.2)                  # let the byte flush over the wire
         except WebSocketDisconnect:
             print("📢 Announcement: client disconnected mid-clip")
         except Exception as e:
