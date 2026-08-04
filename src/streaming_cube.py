@@ -3253,6 +3253,11 @@ async def handle_media_stream(websocket: WebSocket):
     # rows. The only reliable signal is Cube's CLI/DNI packet (0x20), checked
     # against the outbound registry: a match means "ours, already tracked";
     # no match (or no packet within the wait) means genuinely inbound.
+    # Tracks the DB id of a call row created below, so the hangup code further
+    # down can mark it 'completed' (setting call_ended_at) — without that, the
+    # recording webhook's Tier-3 fuzzy match can never find this row, since it
+    # requires call_ended_at to already be set. See ANNOUNCEMENT hangup blocks.
+    _inbound_call_id = None
     if ANNOUNCEMENT_MODE:
         _inbound_phone = None
         if phone_number and not _outbound_registry_matched:
@@ -3346,6 +3351,12 @@ async def handle_media_stream(websocket: WebSocket):
         except Exception as e:
             print(f"❌ Silent hold error: {e}")
         finally:
+            if _inbound_call_id:
+                try:
+                    db.update_call_status(_inbound_call_id, 'completed')
+                    print(f"📥 Inbound call marked completed: {_inbound_call_id}")
+                except Exception as db_err:
+                    print(f"⚠️ Could not mark inbound call completed: {db_err}")
             try:
                 await websocket.close()
                 print("🔇 Silent hold: WebSocket closed — call terminated")
@@ -3373,6 +3384,12 @@ async def handle_media_stream(websocket: WebSocket):
         except Exception as e:
             print(f"❌ Announcement mode error: {e}")
         finally:
+            if _inbound_call_id:
+                try:
+                    db.update_call_status(_inbound_call_id, 'completed')
+                    print(f"📥 Inbound call marked completed: {_inbound_call_id}")
+                except Exception as db_err:
+                    print(f"⚠️ Could not mark inbound call completed: {db_err}")
             try:
                 await websocket.close()
                 print("📢 Announcement: WebSocket closed — call terminated")
