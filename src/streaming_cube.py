@@ -83,6 +83,12 @@ CUBE_CHUNK_DELAY = 0.2  # seconds (200ms)
 # The outbound call record already exists (created at /make-call) and the
 # /getCallStatus + recording webhooks fire independently, so call tracking stays intact.
 ANNOUNCEMENT_MODE = True
+# When False, the announcement branch sends no audio at all and just holds the
+# line open in silence for ANNOUNCEMENT_SILENT_HOLD_SECONDS before hanging up —
+# used when an OTP/IVR recording plays automatically on the telephony side and
+# our own clip would be redundant. Flip back to True to resume playing our clip.
+PLAY_ANNOUNCEMENT_AUDIO = False
+ANNOUNCEMENT_SILENT_HOLD_SECONDS = 60.0
 ANNOUNCEMENT_PCM_PATH = os.path.join(os.path.dirname(__file__), "announcement", "announcement_8k_mono_s16le.pcm")
 _announcement_pcm_cache = None  # lazily-loaded raw PCM bytes (8kHz / 16-bit / mono / LE)
 
@@ -3249,6 +3255,28 @@ async def handle_media_stream(websocket: WebSocket):
     # fixed safety margin before hanging up — the same dumb sleep-then-close
     # pattern already proven by the CALL_MAX_DURATION auto-cutoff below.
     ANNOUNCEMENT_HANGUP_SAFETY_MARGIN = 5.0  # seconds, generous cushion past clip end
+    if ANNOUNCEMENT_MODE and not PLAY_ANNOUNCEMENT_AUDIO:
+        # Silent hold — an OTP/IVR recording plays automatically on the telephony
+        # side, so we send no audio at all; just keep the line open, then hang up
+        # the same proven way (0x00 byte + close) as the audio-clip path below.
+        try:
+            print(f"🔇 Silent hold: holding line for {ANNOUNCEMENT_SILENT_HOLD_SECONDS:.0f}s, no audio sent")
+            await asyncio.sleep(ANNOUNCEMENT_SILENT_HOLD_SECONDS)
+            print("🔇 Silent hold finished — sending hangup")
+            await websocket.send_bytes(b'\x00')      # Cube hangup signal
+            await asyncio.sleep(0.2)                  # let the byte flush over the wire
+        except WebSocketDisconnect:
+            print("🔇 Silent hold: client disconnected mid-hold")
+        except Exception as e:
+            print(f"❌ Silent hold error: {e}")
+        finally:
+            try:
+                await websocket.close()
+                print("🔇 Silent hold: WebSocket closed — call terminated")
+            except Exception:
+                pass
+        return
+
     if ANNOUNCEMENT_MODE:
         try:
             pcm = _load_announcement_pcm()
