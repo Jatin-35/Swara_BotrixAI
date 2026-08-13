@@ -87,7 +87,7 @@ ANNOUNCEMENT_MODE = True
 # line open in silence for ANNOUNCEMENT_SILENT_HOLD_SECONDS before hanging up —
 # used when an OTP/IVR recording plays automatically on the telephony side and
 # our own clip would be redundant. Flip back to True to resume playing our clip.
-PLAY_ANNOUNCEMENT_AUDIO = False
+PLAY_ANNOUNCEMENT_AUDIO = True
 ANNOUNCEMENT_SILENT_HOLD_SECONDS = 60.0
 ANNOUNCEMENT_PCM_PATH = os.path.join(os.path.dirname(__file__), "announcement", "announcement_8k_mono_s16le.pcm")
 _announcement_pcm_cache = None  # lazily-loaded raw PCM bytes (8kHz / 16-bit / mono / LE)
